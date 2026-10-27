@@ -1,0 +1,19 @@
+{
+  "start": "----- Chat history ({0} messages) -----",
+  "end": "----- End of chat history -----",
+  "empty": "No chat history is available.",
+  "config_error": "[Chat History] Configuration error: fallback settings are in use. Ask an administrator to check the server log.",
+  "unavailable": "Chat history is not ready for this world.",
+  "config_value": "{0} = {1}",
+  "config_saved": "Saved {0} = {1}. The change is now active.",
+  "config_reloaded": "Chat history configuration reloaded.",
+  "operation_failed": "Operation failed. Check the value and the server log; the previous valid configuration remains active.",
+  "clear_pending": "Clearing this world's chat history and recovery copies...",
+  "clear_done": "Chat history and recovery copies have been cleared.",
+  "clear_failed": "History was cleared in memory, but persistence failed. Check the server log before restarting.",
+  "status": "Stored: {0}; visible: {1}; limit: {2}; mode: {3}; configuration: {4}; persistence: {5}; pending writes: {6}.",
+  "healthy": "healthy",
+  "error": "error (see server log)",
+  "unsigned": "unsigned player chat",
+  "system": "system messages"
+}

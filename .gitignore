@@ -1,0 +1,9 @@
+/AGENTS.md
+/local-files/
+/.gradle/
+/build/
+/run/
+/out/
+/.idea/
+*.iml
+.DS_Store
