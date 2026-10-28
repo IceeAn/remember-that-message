@@ -26,7 +26,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Exercises codecs and packet data only. Does not start a game, world, or server. */
+/** Exercises codecs, packet data, and unsigned validation without starting a game. */
 class VanillaProtocolTest {
     private static RegistryAccess registries;
     private static MessageCodec codec;
@@ -66,6 +66,25 @@ class VanillaProtocolTest {
             assertEquals(data.senderId(), decoded.sender());
             assertTrue(decoded.signature().isEmpty());
             assertEquals(playerChat.decoratedContent(), decoded.unsignedContent().orElseThrow());
+
+            // Match the no-session branch in ClientPacketListener.handlePlayerChat.
+            // Packet preservation does not imply that timestamp mods see the stored time.
+            var received = new PlayerChatMessage(SignedMessageLink.unsigned(decoded.sender()),
+                    decoded.signature().orElse(null),
+                    decoded.body().unpack(MessageSignatureCache.createDefault()).orElseThrow(),
+                    decoded.unsignedContent().orElse(null), decoded.filterMask());
+            var beforeValidation = Instant.now();
+            var validated = SignedMessageValidator.ACCEPT_UNSIGNED.updateAndValidate(received);
+            var afterValidation = Instant.now();
+            assertNotNull(validated);
+            assertNotEquals(time, validated.timeStamp());
+            assertFalse(validated.timeStamp().isBefore(beforeValidation));
+            assertFalse(validated.timeStamp().isAfter(afterValidation));
+            assertEquals(received.sender(), validated.sender());
+            assertEquals(received.signedContent(), validated.signedContent());
+            assertEquals(received.decoratedContent(), validated.decoratedContent());
+            assertEquals(received.filterMask(), validated.filterMask());
+            assertNull(validated.signature());
         } finally { bytes.release(); }
     }
 

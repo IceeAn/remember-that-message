@@ -76,9 +76,9 @@ Player notices use Simplified Chinese only for `zh_cn`, otherwise English. Conso
 
 ## Timestamps, secure chat, and client limits
 
-The unsigned-player-chat path preserves the event's original protocol timestamp. If vanilla has already reconstructed an unsigned incoming message with its receive time, that is the time retained. No original signatures or historical session keys are saved. Offline sender identities are temporarily supplied as unlisted player info, and current online chat sessions are restored after replay.
+Storage and unsigned player-chat packets retain the event's timestamp. If vanilla has already reconstructed an unsigned incoming message with its receive time, that is the time saved. However, the Minecraft 26.3 client rebuilds the message body during unsigned validation on the current replay path, replacing its timestamp with the current receive time. Chat Patches 8.0.0 reads that replacement time, so **its built-in timestamp does not currently show the historical send time**. Preserving a packet timestamp does not guarantee its display on the client.
 
-When secure profiles are enforced, `auto` falls back to system messages. System messages have **no original chat timestamp field**; timestamp mods may display the replay/receive time. A server owner who wants the unsigned timestamp path can manually set `enforce-secure-profile=false` in `server.properties`; `online-mode` can remain enabled. The mod never changes either setting.
+No original signatures or historical session keys are saved. Offline sender identities are temporarily supplied as unlisted player info, and current online chat sessions are restored after replay. When secure profiles are enforced, `auto` falls back to system messages, which have **no original chat timestamp field**. Setting `enforce-secure-profile=false` allows `auto` to use unsigned player chat but **does not fix the timestamp display limitation**; `online-mode` can remain enabled. The mod never changes either setting.
 
 Unsigned historical player messages are not secure signed chat. A client's **Only Show Secure Chat** setting may hide them, and the server cannot detect that toggle. Use `system` if system-message delivery is preferable. Client chat visibility and other mods can also affect display.
 

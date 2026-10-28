@@ -8,7 +8,7 @@ Run `./gradlew clean build` using Java 25. Tests exercise history retention and 
 
 `ReplayVisibilityTest` calls the production `visibleTo` entry point with a Mockito subclass of `ServerPlayer` and real vanilla permission sets. It covers ordinary players and every operator level across all three chat visibility settings, sender/recipient filtering, and the self-message exception. No world, connection, or attached mocking agent is required.
 
-Protocol tests bootstrap vanilla registries and codecs only. They do not create a world or connect a client. JUnit does not apply Fabric Mixins: the player-info packet test writes the accessor's target field reflectively so the actual vanilla serialization can be tested. Successful tests therefore do not prove loader injection, event ordering in a running server, or client acceptance.
+Protocol tests bootstrap vanilla registries and codecs and invoke the native unsigned validator without creating a world or connecting a client. They explicitly check that packet round trips retain historical time while `SignedMessageValidator.ACCEPT_UNSIGNED` replaces it with receive time. JUnit does not apply Fabric Mixins: the player-info packet test writes the accessor's target field reflectively so the actual vanilla serialization can be tested. Successful tests therefore do not prove loader injection, event ordering in a running server, or client acceptance.
 
 Snapshot and cache regressions exercise end-of-tick persistence, unchanged ticks, immediate configuration shrinking, clearing dirty history, final shutdown records, immutable snapshot reuse, world-local cache eviction, lazy decoding, and recipient-specific filtering. WorldHistory tests use simulated server/player contexts and real files; they do not run a game server.
 
@@ -20,12 +20,12 @@ Use disposable test installations and worlds. Do not use real saves. Record the 
 | --- | --- |
 | Fabric 26.3 server, vanilla 26.3 client | Client connects without extra mods; batch includes the current enabled join announcement; next live chat works. |
 | Online mode, effective secure profiles enforced, `auto` | Player history is system chat; no historical signature/session validation error. |
-| Online mode with `enforce-secure-profile=false`, `auto` | Unsigned player history retains stored time; live signed chat works after the batch. |
+| Online mode with `enforce-secure-profile=false`, `auto` | Unsigned history displays with receive time after client validation; live signed chat works after the batch. |
 | Offline mode, `auto` | Unsigned history works; restart and sender reconnect do not cause invalid chat errors. |
 | `system` in each authentication mode | All replay is system chat; no player-info changes needed. |
 | Only Show Secure Chat enabled | Unsigned replay may be hidden; system fallback behavior and documentation agree with the client. |
-| Sender offline, renamed, or reconnected; server restart | Old sender name/time remain; no temporary sender appears in Tab; current session is restored. |
-| Compatible released Chat Patches for 26.3 | Record the exact version. Verify stored timestamps on unsigned chat, receive time limitation on system messages, and continued live chat. |
+| Sender offline, renamed, or reconnected; server restart | Old sender names and stored times remain (client display has the limitation above); no temporary sender appears in Tab; current session is restored. |
+| Compatible released Chat Patches for 26.3 | Record the exact version. Version 8.0.0 shows receive time on the current unsigned replay path; system messages also lack original timestamps. Verify continued live chat. |
 | Singleplayer, LAN host with cheats off, LAN vanilla guest | Owner can administer; ordinary guest cannot; all receive their eligible history. |
 | Switch between two singleplayer worlds | Histories stay isolated; installation-level settings are shared. |
 | Private/team chat, team-only deaths, blocked Fabric events | None leak into global history. Standard public events obey vanilla gamerules. |
