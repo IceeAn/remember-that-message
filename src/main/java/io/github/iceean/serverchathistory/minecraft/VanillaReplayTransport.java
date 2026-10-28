@@ -7,7 +7,6 @@ import net.minecraft.network.chat.*;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.entity.player.ChatVisiblity;
 
 /** Uses only vanilla packets. All changes to player info are recipient-local. */
@@ -26,12 +25,12 @@ public final class VanillaReplayTransport implements ReplayTransport {
     }
 
     @Override public List<HistoryEntry> visibleTo(ServerPlayer recipient, List<HistoryEntry> entries) {
-        if (recipient.getChatVisibility() == ChatVisiblity.HIDDEN) return List.of();
+        var visibility = recipient.getChatVisibility();
+        if (visibility == ChatVisiblity.HIDDEN) return List.of();
+        // Vanilla receive checks use chat visibility, not command-level permissions.
         return entries.stream().filter(entry -> entry.message().chat() == null
-                ? recipient.permissions().hasPermission(Permissions.CHAT_RECEIVE_SYSTEM_MESSAGES)
-                : recipient.permissions().hasPermission(Permissions.CHAT_RECEIVE_PLAYER_MESSAGES)
-                    && recipient.getChatVisibility() == ChatVisiblity.FULL
-                    && !mask(recipient, entry.message().chat()).isFullyFiltered()).toList();
+                || (visibility == ChatVisiblity.FULL
+                    && !mask(recipient, entry.message().chat()).isFullyFiltered())).toList();
     }
 
     public static PlayerChatMessage unsigned(HistoryEntry.Message message, Component body, FilterMask mask) {

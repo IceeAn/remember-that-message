@@ -13,6 +13,7 @@ dependencies {
     implementation("net.fabricmc.fabric-api:fabric-api:0.165.0+26.3")
     testImplementation(platform("org.junit:junit-bom:6.0.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.mockito:mockito-core:5.20.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

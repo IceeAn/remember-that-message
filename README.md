@@ -20,7 +20,7 @@ The default capacity is **50 records per world**, shared across dimensions. Publ
 
 Private messages, team chat, restricted-audience deaths, command output, `/say`, `/me`, `/tellraw`, and external chat bridges are outside the initial scope. Capture observes Fabric's allowed public broadcast events and standard vanilla message types. Mods that replace those paths or forge vanilla event components may require explicit integration.
 
-Rich text, names, colors, translations, and hover information are preserved. Only the batch has start/end notices; individual records receive no extra prefix or timestamp. Filtering and recipient chat permissions are respected. Replay and mod notices are never recorded again.
+Rich text, names, colors, translations, and hover information are preserved. Only the batch has start/end notices; individual records receive no extra prefix or timestamp. Filtering and the recipient's chat visibility settings are respected. Replay and mod notices are never recorded again.
 
 This version sends recent history to **every joining player**, including first-time visitors and quick reconnects. It does not track which messages an individual missed, and has no player query or pagination command.
 

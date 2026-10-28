@@ -6,6 +6,8 @@
 
 Run `./gradlew clean build` using Java 25. Tests exercise history retention and order, event visibility, configuration validation/recovery, permissions policy, localization, JSON and backup recovery, world storage isolation, asynchronous clear/save races, final flush, filtering, native packet codecs, historical timestamps, and recipient-local player-info restoration after a replay failure.
 
+`ReplayVisibilityTest` calls the production `visibleTo` entry point with a Mockito subclass of `ServerPlayer` and real vanilla permission sets. It covers ordinary players and every operator level across all three chat visibility settings, sender/recipient filtering, and the self-message exception. No world, connection, or attached mocking agent is required.
+
 Protocol tests bootstrap vanilla registries and codecs only. They do not create a world or connect a client. JUnit does not apply Fabric Mixins: the player-info packet test writes the accessor's target field reflectively so the actual vanilla serialization can be tested. Successful tests therefore do not prove loader injection, event ordering in a running server, or client acceptance.
 
 ## Manual acceptance — separate confirmation required
