@@ -7,6 +7,7 @@ import io.github.iceean.serverchathistory.storage.*;
 import io.github.iceean.serverchathistory.text.Translations;
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.ChatFormatting;
@@ -23,8 +24,10 @@ public final class WorldHistory implements AutoCloseable {
     private final AsyncHistoryWriter writer;
     private final ReplayTransport transport;
     private final MessageCapture capture;
+    private final ReplayMessageCache replayCache;
     private final LinkedHashSet<UUID> pendingJoins = new LinkedHashSet<>();
     private boolean replaying;
+    private boolean dirty;
     private String recoveryError;
 
     public WorldHistory(MinecraftServer server, Path configPath) {
@@ -33,7 +36,8 @@ public final class WorldHistory implements AutoCloseable {
         config.reload();
         var codec = new MessageCodec(server.registryAccess());
         capture = new MessageCapture(codec);
-        transport = new VanillaReplayTransport(server, codec);
+        replayCache = new ReplayMessageCache(codec);
+        transport = new VanillaReplayTransport(server, replayCache);
         var store = new JsonHistoryStore(server.getWorldPath(LevelResource.ROOT).resolve("data/server_chat_history/history.json"),
                 codec::validate, failure -> {
                     recoveryError = failure.toString();
@@ -55,36 +59,46 @@ public final class WorldHistory implements AutoCloseable {
     public void record(HistoryEntry.Message message) {
         if (replaying || message == null || !config.active().includes(message.kind())) return;
         buffer.append(message);
-        writer.save(buffer.snapshot());
+        dirty = true;
     }
 
     public void configChanged() {
         buffer.resize(config.active().historyLimit());
+        saveSnapshot();
+    }
+
+    private void saveSnapshot() {
+        replayCache.retain(buffer.snapshot());
         writer.save(buffer.snapshot());
+        dirty = false;
     }
 
     public CompletableFuture<Void> clear() {
         buffer.clear();
+        replayCache.clear();
+        dirty = false;
         return writer.clear(buffer.snapshot());
     }
 
     public void joined(ServerPlayer player) { pendingJoins.add(player.getUUID()); }
 
     public void tick() {
+        if (dirty) saveSnapshot();
         // JOIN fires partway through placeNewPlayer. End-of-tick runs after its join
         // announcement and player-info packets, without introducing a timer delay.
         var joined = pendingJoins.toArray(UUID[]::new);
         pendingJoins.clear();
+        var entries = joined.length == 0 ? List.<HistoryEntry>of() : ReplayPolicy.RECENT.select(buffer.snapshot(), config.active());
         for (var id : joined) {
             var player = server.getPlayerList().getPlayer(id);
             if (player == null) continue;
-            try { replay(player); }
+            try { replay(player, entries); }
             catch (RuntimeException failure) { ServerChatHistoryMod.LOGGER.error("Cannot replay chat history to {}", id, failure); }
         }
     }
 
-    private void replay(ServerPlayer player) {
-        var entries = transport.visibleTo(player, ReplayPolicy.RECENT.select(buffer.snapshot(), config.active()));
+    private void replay(ServerPlayer player, List<HistoryEntry> history) {
+        var entries = transport.visibleTo(player, history);
         replaying = true;
         try {
             if (!entries.isEmpty()) {
@@ -104,7 +118,9 @@ public final class WorldHistory implements AutoCloseable {
 
     @Override public void close() {
         pendingJoins.clear();
-        writer.flush(buffer.snapshot());
-        writer.close();
+        try {
+            writer.flush(buffer.snapshot());
+            writer.close();
+        } finally { replayCache.clear(); }
     }
 }

@@ -8,6 +8,29 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HistoryPolicyTest {
+    @Test void unchangedSnapshotsAreSharedAndPreviouslyPublishedSnapshotsStayImmutable() {
+        var buffer = new HistoryBuffer(HistorySnapshot.empty(), 2);
+        var empty = buffer.snapshot();
+        assertSame(empty, buffer.snapshot());
+        buffer.append(Fixtures.message(MessageKind.JOIN, "one"));
+        var one = buffer.snapshot();
+        assertSame(one, buffer.snapshot());
+        buffer.resize(10);
+        assertSame(one, buffer.snapshot());
+        buffer.append(Fixtures.message(MessageKind.JOIN, "two"));
+        var two = buffer.snapshot();
+        buffer.resize(1);
+        var trimmed = buffer.snapshot();
+        buffer.clear();
+        assertTrue(empty.entries().isEmpty());
+        assertEquals(1, one.entries().size());
+        assertEquals(2, two.entries().size());
+        assertEquals(2, trimmed.entries().getFirst().sequence());
+        assertTrue(buffer.snapshot().entries().isEmpty());
+        assertEquals(3, buffer.snapshot().nextSequence());
+        assertThrows(UnsupportedOperationException.class, () -> two.entries().clear());
+    }
+
     @Test void keepsLatestRecordsAndSequenceAcrossRestartAndClockChanges() {
         var buffer = new HistoryBuffer(HistorySnapshot.empty(), 2);
         buffer.append(Fixtures.message(MessageKind.JOIN, "first"));

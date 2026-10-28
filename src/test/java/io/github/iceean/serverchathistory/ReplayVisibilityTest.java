@@ -3,6 +3,7 @@ package io.github.iceean.serverchathistory;
 import io.github.iceean.serverchathistory.core.HistoryEntry;
 import io.github.iceean.serverchathistory.core.MessageKind;
 import io.github.iceean.serverchathistory.minecraft.MessageCodec;
+import io.github.iceean.serverchathistory.minecraft.ReplayMessageCache;
 import io.github.iceean.serverchathistory.minecraft.VanillaReplayTransport;
 import java.time.Instant;
 import java.util.Arrays;
@@ -31,7 +32,7 @@ class ReplayVisibilityTest {
     private static final UUID SENDER = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID RECIPIENT = UUID.fromString("00000000-0000-0000-0000-000000000002");
     // Visibility filtering does not access the server or component codec.
-    private final VanillaReplayTransport transport = new VanillaReplayTransport(null, null);
+    private final VanillaReplayTransport transport = new VanillaReplayTransport(null, new ReplayMessageCache(null));
 
     @BeforeAll static void bootstrapCodecs() {
         SharedConstants.tryDetectVersion();

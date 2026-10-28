@@ -8,10 +8,12 @@ public final class HistoryBuffer {
     private final ArrayDeque<HistoryEntry> entries = new ArrayDeque<>();
     private long nextSequence;
     private long limit;
+    private HistorySnapshot cachedSnapshot;
 
     public HistoryBuffer(HistorySnapshot snapshot, long limit) {
         entries.addAll(snapshot.entries());
         nextSequence = snapshot.nextSequence();
+        cachedSnapshot = snapshot;
         resize(limit);
     }
 
@@ -19,6 +21,7 @@ public final class HistoryBuffer {
         long following = Math.incrementExact(nextSequence);
         entries.addLast(new HistoryEntry(nextSequence, message));
         nextSequence = following;
+        cachedSnapshot = null;
         trim();
     }
 
@@ -28,8 +31,16 @@ public final class HistoryBuffer {
         trim();
     }
 
-    private void trim() { while (entries.size() > limit) entries.removeFirst(); }
-    public void clear() { entries.clear(); }
+    private void trim() {
+        while (entries.size() > limit) {
+            entries.removeFirst();
+            cachedSnapshot = null;
+        }
+    }
+    public void clear() { entries.clear(); cachedSnapshot = null; }
     public int size() { return entries.size(); }
-    public HistorySnapshot snapshot() { return new HistorySnapshot(HistorySnapshot.VERSION, nextSequence, List.copyOf(entries)); }
+    public HistorySnapshot snapshot() {
+        if (cachedSnapshot == null) cachedSnapshot = new HistorySnapshot(HistorySnapshot.VERSION, nextSequence, List.copyOf(entries));
+        return cachedSnapshot;
+    }
 }

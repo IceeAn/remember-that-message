@@ -10,6 +10,8 @@ Run `./gradlew clean build` using Java 25. Tests exercise history retention and 
 
 Protocol tests bootstrap vanilla registries and codecs only. They do not create a world or connect a client. JUnit does not apply Fabric Mixins: the player-info packet test writes the accessor's target field reflectively so the actual vanilla serialization can be tested. Successful tests therefore do not prove loader injection, event ordering in a running server, or client acceptance.
 
+Snapshot and cache regressions exercise end-of-tick persistence, unchanged ticks, immediate configuration shrinking, clearing dirty history, final shutdown records, immutable snapshot reuse, world-local cache eviction, lazy decoding, and recipient-specific filtering. WorldHistory tests use simulated server/player contexts and real files; they do not run a game server.
+
 ## Manual acceptance — separate confirmation required
 
 Use disposable test installations and worlds. Do not use real saves. Record the server/mod/client versions and settings with the result. These checks have not been completed merely because the JAR builds.

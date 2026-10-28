@@ -12,16 +12,17 @@ import net.minecraft.world.entity.player.ChatVisiblity;
 /** Uses only vanilla packets. All changes to player info are recipient-local. */
 public final class VanillaReplayTransport implements ReplayTransport {
     private final MinecraftServer server;
-    private final MessageCodec codec;
-    public VanillaReplayTransport(MinecraftServer server, MessageCodec codec) { this.server = server; this.codec = codec; }
+    private final ReplayMessageCache cache;
+    public VanillaReplayTransport(MinecraftServer server, ReplayMessageCache cache) { this.server = server; this.cache = cache; }
 
     public static boolean needsFiltering(HistoryEntry.Chat chat, UUID recipient, boolean recipientFiltering) {
         return !chat.senderId().equals(recipient) && (chat.senderFiltering() || recipientFiltering);
     }
 
-    private FilterMask mask(ServerPlayer player, HistoryEntry.Chat chat) {
+    private FilterMask mask(ServerPlayer player, HistoryEntry entry) {
+        var chat = entry.message().chat();
         return needsFiltering(chat, player.getUUID(), player.isTextFilteringEnabled())
-                ? MessageCodec.decodeMask(chat.filterMaskJson()) : FilterMask.PASS_THROUGH;
+                ? cache.get(entry).mask() : FilterMask.PASS_THROUGH;
     }
 
     @Override public List<HistoryEntry> visibleTo(ServerPlayer recipient, List<HistoryEntry> entries) {
@@ -30,7 +31,7 @@ public final class VanillaReplayTransport implements ReplayTransport {
         // Vanilla receive checks use chat visibility, not command-level permissions.
         return entries.stream().filter(entry -> entry.message().chat() == null
                 || (visibility == ChatVisiblity.FULL
-                    && !mask(recipient, entry.message().chat()).isFullyFiltered())).toList();
+                    && !mask(recipient, entry).isFullyFiltered())).toList();
     }
 
     public static PlayerChatMessage unsigned(HistoryEntry.Message message, Component body, FilterMask mask) {
@@ -43,14 +44,16 @@ public final class VanillaReplayTransport implements ReplayTransport {
             for (var entry : entries) {
                 var message = entry.message();
                 var chat = message.chat();
-                if (chat == null) { recipient.sendSystemMessage(codec.decode(message.renderedJson())); continue; }
-                var mask = mask(recipient, chat);
-                var bound = ChatType.bind(ChatType.CHAT, server.registryAccess(), codec.decode(chat.nameJson()));
+                var decoded = cache.get(entry);
+                if (chat == null) { recipient.sendSystemMessage(decoded.rendered()); continue; }
+                var mask = mask(recipient, entry);
                 if (playerPackets) {
+                    var bound = ChatType.bind(ChatType.CHAT, server.registryAccess(), decoded.name());
                     // Maintains the connection's real packet index and signature cache.
-                    recipient.connection.sendPlayerChatMessage(unsigned(message, codec.decode(chat.bodyJson()), mask), bound);
+                    recipient.connection.sendPlayerChatMessage(unsigned(message, decoded.body(), mask), bound);
                 } else {
-                    var rendered = mask.isEmpty() ? codec.decode(message.renderedJson()) : bound.decorate(mask.applyWithFormatting(chat.text()));
+                    var rendered = mask.isEmpty() ? decoded.rendered()
+                            : ChatType.bind(ChatType.CHAT, server.registryAccess(), decoded.name()).decorate(mask.applyWithFormatting(chat.text()));
                     recipient.sendSystemMessage(rendered);
                 }
             }

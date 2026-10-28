@@ -90,7 +90,9 @@ Vanilla retains at most 100 chat messages and 100 rendered lines. Long messages 
 
 Each world uses `data/server_chat_history/history.json`, with one `.bak` recovery snapshot. Versioned JSON retains arrival sequence, event time, rich components, sender identity, raw message body, and filtering information. It contains public chat in readable form; manage world backups accordingly.
 
-A single background writer saves immutable snapshots, coalescing pending ordinary writes. Temporary files and atomic replacement protect updates where the filesystem supports atomic moves. Normal shutdown waits for the final snapshot. A crash or I/O failure can lose changes that have not been persisted; this is not a transactional chat archive.
+Ordinary records are combined into one immutable persistence snapshot at the end of each changed server tick. Unchanged snapshots are reused; a single background writer additionally coalesces pending ordinary writes. Configuration changes and clearing retain their explicit persistence boundaries, and normal shutdown waits for the final snapshot, including records received after the last tick. Temporary files and atomic replacement protect updates where the filesystem supports atomic moves. A crash or I/O failure can lose changes that have not been persisted; this is not a transactional chat archive.
+
+Replay lazily caches decoded text components per world and shares them across recipients. Eviction, shrinking, clearing, and shutdown release obsolete cache entries. Visibility, text filtering, packet indices, and chat sessions remain recipient-specific. Replay still sends all retained, enabled records in the join tick; this optimization does not introduce pagination or spread replay across ticks.
 
 An invalid primary file is quarantined as `.corrupt-<uuid>` and the backup is tried. If neither copy is usable, the mod starts empty and logs the error while preserving damaged files. If preservation itself fails, writes refuse to overwrite those files; repair permissions and restart, or explicitly clear. Storage failures leave recording active in memory and are retried on subsequent changes and shutdown.
 
