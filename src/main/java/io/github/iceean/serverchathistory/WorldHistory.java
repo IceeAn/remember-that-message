@@ -5,6 +5,8 @@ import io.github.iceean.serverchathistory.core.*;
 import io.github.iceean.serverchathistory.minecraft.*;
 import io.github.iceean.serverchathistory.storage.*;
 import io.github.iceean.serverchathistory.text.Translations;
+import io.github.iceean.serverchathistory.network.*;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -22,7 +24,7 @@ public final class WorldHistory implements AutoCloseable {
     private final ConfigManager config;
     private final HistoryBuffer buffer;
     private final AsyncHistoryWriter writer;
-    private final ReplayTransport transport;
+    private final VanillaReplayTransport transport;
     private final MessageCapture capture;
     private final ReplayMessageCache replayCache;
     private final LinkedHashSet<UUID> pendingJoins = new LinkedHashSet<>();
@@ -37,7 +39,7 @@ public final class WorldHistory implements AutoCloseable {
         var codec = new MessageCodec(server.registryAccess());
         capture = new MessageCapture(codec);
         replayCache = new ReplayMessageCache(codec);
-        transport = new VanillaReplayTransport(server, replayCache);
+        transport = new VanillaReplayTransport(replayCache);
         var store = new JsonHistoryStore(server.getWorldPath(LevelResource.ROOT).resolve("data/server_chat_history/history.json"),
                 codec::validate, failure -> {
                     recoveryError = failure.toString();
@@ -52,7 +54,7 @@ public final class WorldHistory implements AutoCloseable {
     public MessageCapture capture() { return capture; }
     public int size() { return buffer.size(); }
     public int visibleSize() { return ReplayPolicy.RECENT.select(buffer.snapshot(), config.active()).size(); }
-    public boolean playerPackets() { return ReplayPolicy.usePlayerPackets(config.active(), server.enforceSecureProfile()); }
+
     public boolean storageError() { return recoveryError != null || writer.lastFailure() != null; }
     public int pendingWrites() { return writer.pendingJobs(); }
 
@@ -98,17 +100,24 @@ public final class WorldHistory implements AutoCloseable {
     }
 
     private void replay(ServerPlayer player, List<HistoryEntry> history) {
-        var entries = transport.visibleTo(player, history);
+        var delivery = ServerHistoryNetworking.delivery(player, config.active());
+        if (delivery.failed()) notice(player, "negotiation_failed", true);
+        if (!delivery.preferences().receiveHistory()) return;
+        var entries = ReplaySelection.latest(history, delivery.preferences(), entry -> transport.visible(player, entry));
+        if (delivery.enhanced()) ServerPlayNetworking.send(player, new HistoryProtocol.Boundary(true, entries.size()));
         replaying = true;
         try {
             if (!entries.isEmpty()) {
                 notice(player, "start", false, entries.size());
-                transport.send(player, entries, playerPackets());
+                transport.send(player, entries, delivery.enhanced());
             }
             for (var notice : NoticePolicy.after(entries.size(), config.active(), config.hasError())) {
                 notice(player, notice.name().toLowerCase(java.util.Locale.ROOT), notice == NoticePolicy.Notice.CONFIG_ERROR);
             }
-        } finally { replaying = false; }
+        } finally {
+            replaying = false;
+            if (delivery.enhanced()) ServerPlayNetworking.send(player, new HistoryProtocol.Boundary(false, entries.size()));
+        }
     }
 
     private static void notice(ServerPlayer player, String key, boolean error, Object... args) {

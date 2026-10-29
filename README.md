@@ -2,14 +2,14 @@
 
 [简体中文](README.zh-CN.md)
 
-A Fabric mod for **Minecraft Java 26.3** that replays a world's recent public chat when a player joins. Install it on the server; **vanilla clients do not need this mod or Fabric**. It also supports the logical server in singleplayer and LAN worlds.
+A Fabric mod for **Minecraft Java 26.3** that replays a world's recent public chat when a player joins. Install it on the server; **vanilla clients do not need this mod or Fabric**. The same JAR optionally adds client preferences, a settings screen, and Chat Patches historical timestamps. It also supports the logical server in singleplayer and LAN worlds.
 
-Version 0.1.0 targets Java 25, Fabric Loader 0.20.1, and Fabric API 0.165.0+26.3. The project name is provisional; the mod ID is `server_chat_history`.
+Version 0.2.0 targets Java 25, Fabric Loader 0.20.1, and Fabric API 0.165.0+26.3. The project name is provisional; the mod ID is `server_chat_history`.
 
 ## Install
 
 1. Set up a Fabric 26.3 server with Java 25 and Fabric Loader 0.20.1.
-2. Put Fabric API 0.165.0+26.3 and `server-chat-history-0.1.0.jar` in its `mods` directory.
+2. Put Fabric API 0.165.0+26.3 and `server-chat-history-0.2.0.jar` in its `mods` directory.
 3. Start the server. The mod creates `config/server_chat_history.json` and a history file inside the world.
 
 For singleplayer or LAN hosting, install those mods in the host's Fabric game instance. Guests may use vanilla 26.3. This mod does not change authentication, secure profile enforcement, or the server EULA.
@@ -47,7 +47,7 @@ The config belongs to the game/server installation, so singleplayer saves in the
 | --- | --- |
 | `historyLimit` | Positive 64-bit integer. No additional fixed cap or upfront allocation; actual memory, disk, and client limits still apply. |
 | `events.join`, `events.leave`, `events.death`, `events.advancement` | Capture and display that event category. Disabled saved events remain in the capacity budget and reappear if reenabled before eviction. |
-| `replayMode` | `auto` selects unsigned player chat when the server's effective secure profile policy allows it; otherwise system messages. `system` always uses system messages. Events always use system messages. |
+| `replayMode` | `auto` uses the enhanced history protocol for compatible clients and vanilla system messages otherwise. `system` always uses system messages; successfully negotiated client preferences still apply. |
 | `showEmptyHistory` | Show a notice when no eligible records exist. |
 | `showConfigErrors` | Append a red config-error notice on join, independently of the empty-history notice. |
 
@@ -74,25 +74,56 @@ Command changes are validated, saved, and applied immediately. `reload` loads ma
 
 Player notices use Simplified Chinese only for `zh_cn`, otherwise English. Console output and logs use English; no client translation resource pack is required.
 
-## Timestamps, secure chat, and client limits
+## Optional client installation
 
-Storage and unsigned player-chat packets retain the event's timestamp. If vanilla has already reconstructed an unsigned incoming message with its receive time, that is the time saved. However, the Minecraft 26.3 client rebuilds the message body during unsigned validation on the current replay path, replacing its timestamp with the current receive time. Chat Patches 8.0.0 reads that replacement time, so **its built-in timestamp does not currently show the historical send time**. Preserving a packet timestamp does not guarantee its display on the client.
+Install the same JAR and Fabric API in a Fabric 26.3 client. Chat Patches and Mod Menu are **optional**, not bundled. Without Chat Patches, all client preferences work; this mod adds no timestamp prefix or separate history panel.
 
-No original signatures or historical session keys are saved. Offline sender identities are temporarily supplied as unlisted player info, and current online chat sessions are restored after replay. When secure profiles are enforced, `auto` falls back to system messages, which have **no original chat timestamp field**. Setting `enforce-secure-profile=false` allows `auto` to use unsigned player chat but **does not fix the timestamp display limitation**; `online-mode` can remain enabled. The mod never changes either setting.
+Use `/chathistoryclient` for the settings screen (also available through Mod Menu), or:
 
-Unsigned historical player messages are not secure signed chat. A client's **Only Show Secure Chat** setting may hide them, and the server cannot detect that toggle. Use `system` if system-message delivery is preferable. Client chat visibility and other mods can also affect display.
+```text
+/chathistoryclient status
+/chathistoryclient config get historyLimit
+/chathistoryclient config set historyLimit 100
+/chathistoryclient config set events.join false
+/chathistoryclient config set receiveHistory false
+/chathistoryclient config set chatPatchesIntegration false
+/chathistoryclient reload
+```
 
-Vanilla retains at most 100 chat messages and 100 rendered lines. Long messages wrap, so even the default 50 records may exceed the visible line budget. Batch notices and config errors also use chat lines without counting toward `historyLimit`.
+These are local commands requiring no server permission. `config/server_chat_history-client.json` holds global preferences shared by all servers:
 
-**Compatibility status:** compilation and automated checks are separate from actual game validation. Vanilla multiplayer, singleplayer/LAN, and Chat Patches timestamp behavior require the manual acceptance checklist in [docs/TESTING.md](docs/TESTING.md). Do not interpret protocol tests as a completed client compatibility claim.
+| Setting | Default and effect |
+| --- | --- |
+| `receiveHistory` | `true`; disabling suppresses history and its start/end, empty and configuration-error notices after successful negotiation. |
+| `historyLimit` | `0` follows the server; a positive integer limits eligible records. |
+| `events.join`, `events.leave`, `events.death`, `events.advancement` | All `true`; filter history only, not live chat or server storage. |
+| `chatPatchesIntegration` | `true`; changes require a **client restart**. |
+
+Ordinary preference changes apply on the **next connection**. They do not remove, reinsert or rewrite existing chat or Chat Patches logs. The server filters by its own policy, recipient visibility and personal event preferences **before** selecting the latest N eligible records, then sends them oldest first. Preferences can only narrow retained server history.
+
+A supporting client negotiates during configuration, with a two-second timeout. Incompatible, incomplete or timed-out negotiation falls back to server-default history and displays a warning; personal preferences, including opt-out, may not apply in that case. Vanilla clients need no negotiation. Client `status` distinguishes saved preferences from those accepted for this connection.
+
+## Historical time and Chat Patches
+
+All event times are **server capture times**, not client-declared send times. The enhanced protocol carries them independently of signed player-chat validation. It neither changes secure-profile policy nor requires `enforce-secure-profile=false`. Historical messages are not authenticated player signatures, and no temporary player identities or chat sessions are sent.
+
+With both sides installed, server `auto`, and compatible Chat Patches integration enabled, the adapter supplies the stored time to Chat Patches for player chat and events. Chat Patches retains control of formatting, timezone, hover/context display, names, duplicate merging and logging. Its own time/system-message settings still apply. Server `system`, a vanilla client, or absent/disabled/failed integration cannot provide historical time through this adapter; Chat Patches may show reception time instead.
+
+The target is **Chat Patches 8.0.0+26.3-fabric**. Other versions are attempted only if the required interface/bytecode checks pass. Passing those checks is **not a completed live compatibility test**; client status marks the integration as unverified in game. An incompatibility or runtime failure disables the adapter, reports the reason and warns once per connection while basic history remains available. Already displayed batches are not resent.
+
+After setting `chatPatchesIntegration=false` and restarting, this mod applies **no Chat Patches Mixin and accesses no Chat Patches internal metadata**. Chat Patches itself still processes ordinary chat according to its own settings. The switch does not disable this mod's independent networking or preferences.
+
+Vanilla retains at most 100 chat messages and 100 rendered lines. Wrapping and batch notices consume that budget; a larger server limit does not enlarge it. Replay remains within the join tick, without pagination or interleaved tick batches.
+
+**Validation status:** automated checks do not prove actual Fabric injection or game compatibility. See [docs/TESTING.md](docs/TESTING.md) for the separate vanilla, optional-client, dedicated-server, singleplayer/LAN and Chat Patches acceptance checks.
 
 ## Persistence
 
-Each world uses `data/server_chat_history/history.json`, with one `.bak` recovery snapshot. Versioned JSON retains arrival sequence, event time, rich components, sender identity, raw message body, and filtering information. It contains public chat in readable form; manage world backups accordingly.
+Each world uses `data/server_chat_history/history.json`, with one `.bak` recovery snapshot. Format version 2 retains arrival sequence, server capture time, rich components, sender identity, and any required filtered component. Redundant raw player-chat packet data is no longer stored. Older history formats are not supported. It contains public chat in readable form; manage world backups accordingly.
 
 Ordinary records are combined into one immutable persistence snapshot at the end of each changed server tick. Unchanged snapshots are reused; a single background writer additionally coalesces pending ordinary writes. Configuration changes and clearing retain their explicit persistence boundaries, and normal shutdown waits for the final snapshot, including records received after the last tick. Temporary files and atomic replacement protect updates where the filesystem supports atomic moves. A crash or I/O failure can lose changes that have not been persisted; this is not a transactional chat archive.
 
-Replay lazily caches decoded text components per world and shares them across recipients. Eviction, shrinking, clearing, and shutdown release obsolete cache entries. Visibility, text filtering, packet indices, and chat sessions remain recipient-specific. Replay still sends all retained, enabled records in the join tick; this optimization does not introduce pagination or spread replay across ticks.
+Replay lazily caches decoded text components per world and shares them across recipients. Eviction, shrinking, clearing, and shutdown release obsolete cache entries. Visibility and text filtering remain recipient-specific. Replay still sends all retained, enabled records in the join tick; this optimization does not introduce pagination or spread replay across ticks.
 
 An invalid primary file is quarantined as `.corrupt-<uuid>` and the backup is tried. If neither copy is usable, the mod starts empty and logs the error while preserving damaged files. If preservation itself fails, writes refuse to overwrite those files; repair permissions and restart, or explicitly clear. Storage failures leave recording active in memory and are retried on subsequent changes and shutdown.
 
@@ -102,8 +133,8 @@ An invalid primary file is quarantined as `.corrupt-<uuid>` and the backup is tr
 ./gradlew clean build
 ```
 
-Use Java 25. The Gradle 9.6.1 wrapper verifies its distribution checksum. Build output is `build/libs/server-chat-history-0.1.0.jar`; the `-sources.jar` is for development. Tests are under `src/test`, and HTML results are under `build/reports/tests/test/`. GitHub Actions builds and uploads the JAR and test reports without publishing a release.
+Use Java 25. The Gradle 9.6.1 wrapper verifies its distribution checksum. Build output is `build/libs/server-chat-history-0.2.0.jar`; the `-sources.jar` is for development. Tests are under `src/test`, and HTML results are under `build/reports/tests/test/`. GitHub Actions builds and uploads the JAR and test reports without publishing a release.
 
-Internals separate capture, immutable records, bounded history, replay policy, vanilla transport, configuration, and persistence. See [docs/TESTING.md](docs/TESTING.md) for validation scope.
+Internals separate capture, immutable records, bounded history, replay policy, vanilla/enhanced transport, optional client integration, configuration, and persistence. See [docs/TESTING.md](docs/TESTING.md) for validation scope.
 
 MIT license. Author: IceeAn.

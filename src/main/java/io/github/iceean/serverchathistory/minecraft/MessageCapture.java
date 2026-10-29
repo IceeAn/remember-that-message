@@ -16,10 +16,14 @@ public final class MessageCapture {
 
     public HistoryEntry.Message chat(PlayerChatMessage message, ServerPlayer sender, ChatType.Bound bound) {
         if (!bound.chatType().is(ChatType.CHAT)) return null;
-        var data = new HistoryEntry.Chat(sender.getUUID(), sender.getGameProfile().name(), message.signedContent(),
-                codec.encode(message.decoratedContent()), codec.encode(bound.name()),
-                MessageCodec.encodeMask(message.filterMask()), sender.isTextFilteringEnabled());
-        return new HistoryEntry.Message(MessageKind.CHAT, message.timeStamp(),
+        var mask = message.filterMask();
+        var filtering = mask.isEmpty() ? HistoryEntry.Filtering.NONE
+                : mask.isFullyFiltered() ? HistoryEntry.Filtering.FULL : HistoryEntry.Filtering.PARTIAL;
+        String filtered = filtering == HistoryEntry.Filtering.PARTIAL
+                ? codec.encode(bound.decorate(mask.applyWithFormatting(message.signedContent()))) : null;
+        var data = new HistoryEntry.Chat(sender.getUUID(), sender.getGameProfile().name(),
+                sender.isTextFilteringEnabled(), filtering, filtered);
+        return new HistoryEntry.Message(MessageKind.CHAT, Instant.now(),
                 codec.encode(bound.decorate(message.decoratedContent())), data);
     }
 

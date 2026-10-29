@@ -35,9 +35,8 @@ class ReplayMessageCacheTest {
     }
 
     private HistoryEntry entry(long sequence, String text) {
-        var mask = new FilterMask(text.length()); mask.setFiltered(1);
-        var chat = new HistoryEntry.Chat(SENDER, "Alice", text, codec.encode(Component.literal(text)),
-                codec.encode(Component.literal("Alice")), MessageCodec.encodeMask(mask), false);
+        var chat = new HistoryEntry.Chat(SENDER, "Alice", false, HistoryEntry.Filtering.PARTIAL,
+                codec.encode(Component.literal("<Alice> " + text.charAt(0) + "#" + text.substring(2))));
         return new HistoryEntry(sequence, new HistoryEntry.Message(MessageKind.CHAT, Instant.EPOCH,
                 codec.encode(Component.literal("<Alice> " + text)), chat));
     }
@@ -46,11 +45,9 @@ class ReplayMessageCacheTest {
         var cache = new ReplayMessageCache(codec); var entry = entry(1, "hello");
         var decoded = cache.get(entry);
         assertSame(decoded.rendered(), cache.get(entry).rendered());
-        assertSame(decoded.body(), cache.get(entry).body());
-        assertSame(decoded.name(), cache.get(entry).name());
-        assertSame(decoded.mask(), cache.get(entry).mask());
+        assertSame(decoded.filtered(), cache.get(entry).filtered());
         assertEquals(codec.decode(entry.message().renderedJson()), decoded.rendered());
-        assertEquals("h#llo", decoded.mask().apply("hello"));
+        assertEquals("<Alice> h#llo", decoded.filtered().getString());
     }
 
     @Test void richEventComponentsKeepTheirTranslationAndHoverData() {
@@ -60,26 +57,6 @@ class ReplayMessageCacheTest {
         var cache = new ReplayMessageCache(codec);
         assertEquals(rich, cache.get(entry).rendered());
         assertEquals(codec.encode(rich), codec.encode(cache.get(entry).rendered()));
-    }
-
-    @Test void cachedUnsignedBodyPreservesTimestampFilterAndConnectionSpecificIndex() {
-        var entry = entry(1, "hello"); var cache = new ReplayMessageCache(codec); var decoded = cache.get(entry);
-        for (int index : new int[]{7, 99}) {
-            var message = VanillaReplayTransport.unsigned(entry.message(), decoded.body(), decoded.mask());
-            var packet = new ClientboundPlayerChatPacket(index, SENDER, message.link().index(), Optional.empty(),
-                    message.signedBody().pack(MessageSignatureCache.createDefault()), Optional.of(message.decoratedContent()),
-                    message.filterMask(), ChatType.bind(ChatType.CHAT, registries, decoded.name()));
-            var bytes = new RegistryFriendlyByteBuf(Unpooled.buffer(), registries);
-            try {
-                ClientboundPlayerChatPacket.STREAM_CODEC.encode(bytes, packet);
-                var restored = ClientboundPlayerChatPacket.STREAM_CODEC.decode(bytes);
-                assertEquals(index, restored.globalIndex());
-                assertEquals(Instant.EPOCH, restored.body().timeStamp());
-                assertEquals(decoded.body(), restored.unsignedContent().orElseThrow());
-                assertEquals(decoded.mask(), restored.filterMask());
-                assertTrue(restored.signature().isEmpty());
-            } finally { bytes.release(); }
-        }
     }
 
     @Test void evictionShrinkAndClearReleaseDecodedEntries() {
@@ -107,14 +84,14 @@ class ReplayMessageCacheTest {
     }
 
     @Test void onlyRequestedFieldsAreDecoded() {
-        var chat = new HistoryEntry.Chat(SENDER, "Alice", "hello", "{}", "{}", "{}", false);
+        var chat = new HistoryEntry.Chat(SENDER, "Alice", false, HistoryEntry.Filtering.PARTIAL, "{}");
         var entry = new HistoryEntry(1, new HistoryEntry.Message(MessageKind.CHAT, Instant.EPOCH, "\"display\"", chat));
         assertEquals("display", new ReplayMessageCache(codec).get(entry).rendered().getString());
     }
 
     @Test void cachedReplayStillAppliesFilteringPerRecipientAndPreservesSelfException() {
         var server = mock(MinecraftServer.class); when(server.registryAccess()).thenReturn(registries);
-        var cache = new ReplayMessageCache(codec); var transport = new VanillaReplayTransport(server, cache);
+        var cache = new ReplayMessageCache(codec); var transport = new VanillaReplayTransport(cache);
         var entry = entry(1, "hello");
         var received = new ArrayList<Component>();
         var player = mock(ServerPlayer.class);

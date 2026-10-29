@@ -17,8 +17,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.*;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.*;
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket.Action;
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket.Entry;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.player.ProfilePublicKey;
 import net.minecraft.world.level.GameType;
@@ -26,7 +24,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Exercises codecs, packet data, and unsigned validation without starting a game. */
+/** Exercises capture, rich components and packet data without starting a game. */
 class VanillaProtocolTest {
     private static RegistryAccess registries;
     private static MessageCodec codec;
@@ -41,61 +39,29 @@ class VanillaProtocolTest {
         codec = new MessageCodec(registries);
     }
 
-    private static HistoryEntry.Chat chat(UUID id) {
-        return new HistoryEntry.Chat(id, "Alice", "hello", codec.encode(Component.literal("hello").withStyle(ChatFormatting.AQUA)),
-                codec.encode(Component.literal("Alice")), MessageCodec.encodeMask(FilterMask.PASS_THROUGH), false);
-    }
-
-    @Test void nativePlayerPacketRoundTripRetainsHistoricalTimeAndNoSignature() {
-        var data = chat(UUID.randomUUID());
-        var time = Instant.parse("2026-09-15T12:34:56.123Z");
-        var message = new HistoryEntry.Message(MessageKind.CHAT, time, codec.encode(Component.literal("<Alice> hello")), data);
-        var restored = JsonSupport.GSON.fromJson(JsonSupport.GSON.toJson(message), HistoryEntry.Message.class);
-        var playerChat = VanillaReplayTransport.unsigned(restored, codec.decode(data.bodyJson()), FilterMask.PASS_THROUGH);
-        assertEquals(time, playerChat.timeStamp());
-        assertNull(playerChat.signature());
-        var original = new ClientboundPlayerChatPacket(17, data.senderId(), playerChat.link().index(), Optional.empty(),
-                playerChat.signedBody().pack(MessageSignatureCache.createDefault()), Optional.of(playerChat.decoratedContent()),
-                playerChat.filterMask(), ChatType.bind(ChatType.CHAT, registries, codec.decode(data.nameJson())));
-        var bytes = new RegistryFriendlyByteBuf(Unpooled.buffer(), registries);
-        try {
-            ClientboundPlayerChatPacket.STREAM_CODEC.encode(bytes, original);
-            var decoded = ClientboundPlayerChatPacket.STREAM_CODEC.decode(bytes);
-            assertEquals(17, decoded.globalIndex());
-            assertEquals(time, decoded.body().timeStamp());
-            assertEquals(data.senderId(), decoded.sender());
-            assertTrue(decoded.signature().isEmpty());
-            assertEquals(playerChat.decoratedContent(), decoded.unsignedContent().orElseThrow());
-
-            // Match the no-session branch in ClientPacketListener.handlePlayerChat.
-            // Packet preservation does not imply that timestamp mods see the stored time.
-            var received = new PlayerChatMessage(SignedMessageLink.unsigned(decoded.sender()),
-                    decoded.signature().orElse(null),
-                    decoded.body().unpack(MessageSignatureCache.createDefault()).orElseThrow(),
-                    decoded.unsignedContent().orElse(null), decoded.filterMask());
-            var beforeValidation = Instant.now();
-            var validated = SignedMessageValidator.ACCEPT_UNSIGNED.updateAndValidate(received);
-            var afterValidation = Instant.now();
-            assertNotNull(validated);
-            assertNotEquals(time, validated.timeStamp());
-            assertFalse(validated.timeStamp().isBefore(beforeValidation));
-            assertFalse(validated.timeStamp().isAfter(afterValidation));
-            assertEquals(received.sender(), validated.sender());
-            assertEquals(received.signedContent(), validated.signedContent());
-            assertEquals(received.decoratedContent(), validated.decoratedContent());
-            assertEquals(received.filterMask(), validated.filterMask());
-            assertNull(validated.signature());
-        } finally { bytes.release(); }
-    }
-
-    @Test void richComponentsAndFilterMasksRoundTripWithoutFlattening() {
+    @Test void richComponentsRoundTripWithoutFlattening() {
         var rich = Component.translatable("multiplayer.player.joined", Component.literal("Alice").withStyle(ChatFormatting.GOLD))
                 .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(Component.literal("details"))));
         assertEquals(rich, codec.decode(codec.encode(rich)));
-        var mask = new FilterMask(5);
-        mask.setFiltered(1);
-        assertEquals(mask, MessageCodec.decodeMask(MessageCodec.encodeMask(mask)));
-        assertEquals("h#llo", mask.apply("hello"));
+    }
+
+    @Test void captureStoresServerTimeAndRecipientSafeAlternatives() {
+        UUID id = UUID.randomUUID();
+        var sender = org.mockito.Mockito.mock(net.minecraft.server.level.ServerPlayer.class);
+        org.mockito.Mockito.when(sender.getUUID()).thenReturn(id);
+        org.mockito.Mockito.when(sender.getGameProfile()).thenReturn(new GameProfile(id, "Alice"));
+        var mask = new FilterMask(5); mask.setFiltered(1);
+        var old = new PlayerChatMessage(SignedMessageLink.unsigned(id), null,
+                new SignedMessageBody("hello", Instant.EPOCH, 0, LastSeenMessages.EMPTY), null, mask);
+        var bound = ChatType.bind(ChatType.CHAT, registries, Component.literal("Alice"));
+        var before = Instant.now();
+        var captured = new MessageCapture(codec).chat(old, sender, bound);
+        assertFalse(captured.time().isBefore(before)); assertFalse(captured.time().isAfter(Instant.now()));
+        assertEquals(HistoryEntry.Filtering.PARTIAL, captured.chat().filtering());
+        assertEquals("<Alice> hello", codec.decode(captured.renderedJson()).getString());
+        assertTrue(codec.decode(captured.chat().filteredJson()).getString().contains("h#llo"));
+        var full = new MessageCapture(codec).chat(old.filter(FilterMask.FULLY_FILTERED), sender, bound);
+        assertEquals(HistoryEntry.Filtering.FULL, full.chat().filtering()); assertNull(full.chat().filteredJson());
     }
 
     @Test void onlyWhitelistedPublicEventComponentsAreClassified() {
@@ -110,72 +76,10 @@ class VanillaProtocolTest {
         }
     }
 
-    @Test void senderAndRecipientFilteringMatchVanillaSelfMessageException() {
-        UUID sender = UUID.randomUUID();
-        var plain = chat(sender);
-        var filtered = new HistoryEntry.Chat(sender, plain.senderName(), plain.text(), plain.bodyJson(), plain.nameJson(), plain.filterMaskJson(), true);
-        assertFalse(VanillaReplayTransport.needsFiltering(filtered, sender, true));
-        assertTrue(VanillaReplayTransport.needsFiltering(filtered, UUID.randomUUID(), false));
-        assertTrue(VanillaReplayTransport.needsFiltering(plain, UUID.randomUUID(), true));
-        assertFalse(VanillaReplayTransport.needsFiltering(plain, UUID.randomUUID(), false));
-    }
-
     @Test void nonPlayerChatTypesAreRejectedBeforeAccessingSender() {
         var custom = new ChatType(ChatTypeDecoration.withSender("chat.type.emote"), ChatTypeDecoration.withSender("chat.type.emote"));
         var bound = new ChatType.Bound(Holder.direct(custom), Component.literal("Alice"), Optional.empty());
         assertNull(new MessageCapture(codec).chat(PlayerChatMessage.unsigned(UUID.randomUUID(), "command output"), null, bound));
     }
 
-    @Test void offlineIdentitiesAreUnlistedAndOnlineSessionsRestoredEvenOnFailure() throws Exception {
-        var offline = chat(UUID.randomUUID());
-        var online = chat(UUID.randomUUID());
-        var keys = KeyPairGenerator.getInstance("RSA").generateKeyPair();
-        var session = new RemoteChatSession.Data(UUID.randomUUID(), new ProfilePublicKey.Data(
-                Instant.parse("2027-01-01T00:00:00Z"), keys.getPublic(), new byte[256]));
-        var current = new Entry(online.senderId(), new GameProfile(online.senderId(), "NewName"), true,
-                42, GameType.CREATIVE, Component.literal("Current"), true, 3, session);
-        var packets = new ArrayList<Packet<?>>();
-        var lease = new PlayerInfoLease(id -> id.equals(online.senderId()) ? current : null, packets::add,
-                VanillaProtocolTest::untransformedPacket);
-        assertThrows(IllegalStateException.class, () -> lease.run(List.of(offline, online, offline), () -> {
-            assertEquals(2, packets.size());
-            throw new IllegalStateException("simulated replay failure");
-        }));
-        assertEquals(4, packets.size());
-        var add = (ClientboundPlayerInfoUpdatePacket) packets.get(0);
-        assertEquals(EnumSet.of(Action.ADD_PLAYER, Action.INITIALIZE_CHAT), add.actions());
-        assertFalse(add.entries().getFirst().listed());
-        assertNull(add.entries().getFirst().chatSession());
-        var cleared = (ClientboundPlayerInfoUpdatePacket) packets.get(1);
-        assertEquals(EnumSet.of(Action.INITIALIZE_CHAT), cleared.actions());
-        assertNull(cleared.entries().getFirst().chatSession());
-        var restored = (ClientboundPlayerInfoUpdatePacket) packets.get(2);
-        assertEquals(List.of(current), restored.entries());
-        var decoded = roundTripInfo(restored);
-        assertEquals(session, decoded.entries().getFirst().chatSession());
-        assertEquals(List.of(offline.senderId()), ((ClientboundPlayerInfoRemovePacket) packets.get(3)).profileIds());
-        var offlineDecoded = roundTripInfo(add);
-        assertFalse(offlineDecoded.entries().getFirst().listed());
-        assertEquals(offline.senderId(), offlineDecoded.entries().getFirst().profileId());
-    }
-
-    private static ClientboundPlayerInfoUpdatePacket roundTripInfo(ClientboundPlayerInfoUpdatePacket packet) {
-        var bytes = new RegistryFriendlyByteBuf(Unpooled.buffer(), registries);
-        try {
-            ClientboundPlayerInfoUpdatePacket.STREAM_CODEC.encode(bytes, packet);
-            return ClientboundPlayerInfoUpdatePacket.STREAM_CODEC.decode(bytes);
-        } finally { bytes.release(); }
-    }
-
-    private static ClientboundPlayerInfoUpdatePacket untransformedPacket(EnumSet<Action> actions, List<Entry> entries) {
-        // JUnit does not launch Fabric/Mixin. Access the same target field to test
-        // native packet codecs; actual Mixin application is a separate live check.
-        try {
-            var packet = new ClientboundPlayerInfoUpdatePacket(actions, List.of());
-            var field = ClientboundPlayerInfoUpdatePacket.class.getDeclaredField("entries");
-            field.setAccessible(true);
-            field.set(packet, List.copyOf(entries));
-            return packet;
-        } catch (ReflectiveOperationException failure) { throw new AssertionError(failure); }
-    }
 }

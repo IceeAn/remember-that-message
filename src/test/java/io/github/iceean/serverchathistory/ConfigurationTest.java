@@ -71,7 +71,7 @@ class ConfigurationTest {
                 assertNotNull(input);
                 var messages = com.google.gson.JsonParser.parseReader(new java.io.InputStreamReader(input, java.nio.charset.StandardCharsets.UTF_8)).getAsJsonObject();
                 for (var key : new String[]{"start", "end", "empty", "config_error", "unavailable", "config_value", "config_saved", "config_reloaded",
-                        "operation_failed", "clear_pending", "clear_done", "clear_failed", "status", "healthy", "error", "unsigned", "system"}) {
+                        "operation_failed", "clear_pending", "clear_done", "clear_failed", "status", "healthy", "error", "auto", "system", "negotiation_failed"}) {
                     assertTrue(messages.has(key), language + ": " + key);
                     assertFalse(messages.get(key).getAsString().isBlank());
                     assertEquals(messages.get(key).getAsString(), Translations.text(language, key));

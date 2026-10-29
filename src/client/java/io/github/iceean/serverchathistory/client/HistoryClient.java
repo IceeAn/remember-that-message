@@ -1,0 +1,97 @@
+package io.github.iceean.serverchathistory.client;
+
+import io.github.iceean.serverchathistory.ServerChatHistoryMod;
+import io.github.iceean.serverchathistory.client.compat.*;
+import io.github.iceean.serverchathistory.config.*;
+import io.github.iceean.serverchathistory.core.*;
+import io.github.iceean.serverchathistory.network.HistoryProtocol;
+import java.util.ArrayList;
+import java.util.List;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.*;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import static io.github.iceean.serverchathistory.client.ClientText.text;
+
+public final class HistoryClient implements ClientModInitializer {
+    public static final ClientConfigStore CONFIG = new ClientConfigStore(FabricLoader.getInstance().getConfigDir().resolve("server_chat_history-client.json"));
+    public static final ChatPatchesAdapter ADAPTER = new ChatPatchesAdapter();
+    private static volatile HistoryProtocol.Status status;
+    private static boolean batch;
+    private static int remaining;
+    private static long lastSequence;
+    private static boolean pendingWarning;
+    private static boolean warned;
+    public static boolean openRequested;
+
+    @Override public void onInitializeClient() {
+        CONFIG.reload();
+        ADAPTER.onFailure(failure -> {
+            ServerChatHistoryMod.LOGGER.warn("Chat Patches history integration disabled: {}", failure);
+            pendingWarning = true;
+        });
+        ClientConfigurationConnectionEvents.INIT.register((listener, client) -> reset());
+        ClientConfigurationNetworking.registerGlobalReceiver(HistoryProtocol.Hello.TYPE, (payload, context) -> {
+            if (ClientConfigurationNetworking.canSend(HistoryProtocol.Preferences.TYPE))
+                context.responseSender().sendPacket(new HistoryProtocol.Preferences(HistoryProtocol.VERSION, CONFIG.active().preferences()));
+        });
+        ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Status.TYPE, (payload, context) -> {
+            status = payload;
+            if (payload.enhanced() && IntegrationBootstrap.ENABLED && !ADAPTER.enabled()
+                    && !ADAPTER.state().equals("absent")) pendingWarning = true;
+        });
+        ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Boundary.TYPE, (payload, context) -> {
+            if (payload.start()) { batch = true; remaining = payload.count(); lastSequence = 0; }
+            else { batch = false; remaining = 0; }
+        });
+        ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Item.TYPE, (payload, context) -> {
+            if (status == null || !status.enhanced() || !batch || remaining <= 0 || payload.sequence() <= lastSequence) {
+                ServerChatHistoryMod.LOGGER.warn("Ignored history item outside the negotiated batch"); return;
+            }
+            remaining--; lastSequence = payload.sequence();
+            var client = context.client(); var player = context.player();
+            if (!player.chatAbilities().canReceiveSystemMessages()) return;
+            if (payload.senderId() != null && (client.isBlocked(payload.senderId()) || client.isFriendOnlyRestricted(payload.senderId()))) return;
+            ADAPTER.display(payload, () -> client.gui.hud.getChat().addServerSystemMessage(payload.content()));
+        });
+        ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> reset());
+        ClientConfigurationConnectionEvents.DISCONNECT.register((listener, client) -> reset());
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (openRequested) { openRequested = false; client.gui.setScreen(new HistoryConfigScreen(null)); }
+            if (pendingWarning && !warned && client.player != null) {
+                pendingWarning = false; warned = true;
+                client.gui.hud.getChat().addClientSystemMessage(text("integration_warning"));
+            }
+        });
+        ClientCommands.register();
+    }
+    private static void reset() {
+        status = null; batch = false; remaining = 0; lastSequence = 0; pendingWarning = false; warned = false;
+        ADAPTER.resetConnection();
+    }
+    public static List<Component> statusLines() {
+        var lines = new ArrayList<Component>();
+        var current = status;
+        lines.add(text("connection", text(current == null ? "unknown" : "reason." + current.reason())));
+        var saved = CONFIG.active();
+        lines.add(text("saved_preferences", saved.preferences().receiveHistory(), limit(saved.preferences().historyLimit()), events(saved.preferences())));
+        if (current != null) lines.add(text("active_preferences", current.preferences().receiveHistory(), limit(current.preferences().historyLimit()), events(current.preferences())));
+        lines.add(text("integration_status", ADAPTER.version(), text("integration." + ADAPTER.state())));
+        lines.add(text("integration_switch", saved.chatPatchesIntegration(), IntegrationBootstrap.ENABLED));
+        if (ADAPTER.enabled()) lines.add(text("unverified"));
+        if (CONFIG.error() != null) lines.add(text("config_error", CONFIG.error()));
+        if (ADAPTER.failure() != null) lines.add(text("integration_detail", ADAPTER.failure()));
+        return lines;
+    }
+    private static Component events(ReplayPreferences preferences) {
+        var result = Component.empty();
+        for (var kind : MessageKind.values()) if (kind != MessageKind.CHAT && preferences.includes(kind)) {
+            if (!result.getSiblings().isEmpty()) result.append(", ");
+            result.append(text("setting.events." + kind.name().toLowerCase(java.util.Locale.ROOT)));
+        }
+        return result.getSiblings().isEmpty() ? text("off") : result;
+    }
+    private static Object limit(long value) { return value == 0 ? text("follow_server") : value; }
+}

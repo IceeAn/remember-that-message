@@ -5,7 +5,6 @@ import io.github.iceean.serverchathistory.core.HistorySnapshot;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FilterMask;
 
 /** Server-thread confined, world-local decoded data. Cached components are read-only. */
 public final class ReplayMessageCache {
@@ -36,9 +35,7 @@ public final class ReplayMessageCache {
         private final HistoryEntry.Message source;
         private final MessageCodec codec;
         private Component rendered;
-        private Component body;
-        private Component name;
-        private FilterMask mask;
+        private Component filtered;
 
         private DecodedMessage(HistoryEntry.Message source, MessageCodec codec) {
             this.source = source;
@@ -50,19 +47,9 @@ public final class ReplayMessageCache {
             return rendered;
         }
 
-        Component body() {
-            if (body == null) body = codec.decode(source.chat().bodyJson());
-            return body;
-        }
-
-        Component name() {
-            if (name == null) name = codec.decode(source.chat().nameJson());
-            return name;
-        }
-
-        FilterMask mask() {
-            if (mask == null) mask = MessageCodec.decodeMask(source.chat().filterMaskJson());
-            return mask;
+        Component filtered() {
+            if (filtered == null) filtered = codec.decode(source.chat().filteredJson());
+            return filtered;
         }
     }
 }

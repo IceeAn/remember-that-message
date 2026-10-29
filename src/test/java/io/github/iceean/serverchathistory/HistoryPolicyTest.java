@@ -78,12 +78,6 @@ class HistoryPolicyTest {
         assertTrue(NoticePolicy.after(0, config, true).isEmpty());
     }
 
-    @Test void autoNeverUsesUnsignedPacketsWhenSecurityIsEnforced() {
-        assertTrue(ReplayPolicy.usePlayerPackets(ModConfig.defaults(), false));
-        assertFalse(ReplayPolicy.usePlayerPackets(ModConfig.defaults(), true));
-        assertFalse(ReplayPolicy.usePlayerPackets(ConfigCodec.with(ModConfig.defaults(), "replayMode", "system"), false));
-    }
-
     @Test void onlyConsoleOperatorsAndIntegratedOwnerCanAdminister() {
         assertTrue(AdminPolicy.allows(true, false, false, false));
         assertTrue(AdminPolicy.allows(false, true, true, false));
@@ -93,9 +87,9 @@ class HistoryPolicyTest {
     }
 
     @Test void rejectsUnsupportedOrUnorderedSnapshots() {
-        assertThrows(IllegalArgumentException.class, () -> new HistorySnapshot(2, 1, List.of()));
+        assertThrows(IllegalArgumentException.class, () -> new HistorySnapshot(1, 1, List.of()));
         var entry = Fixtures.snapshot("one").entries().getFirst();
-        assertThrows(IllegalArgumentException.class, () -> new HistorySnapshot(1, 3, List.of(entry, entry)));
-        assertThrows(IllegalArgumentException.class, () -> new HistorySnapshot(1, 1, List.of(entry)));
+        assertThrows(IllegalArgumentException.class, () -> new HistorySnapshot(2, 3, List.of(entry, entry)));
+        assertThrows(IllegalArgumentException.class, () -> new HistorySnapshot(2, 1, List.of(entry)));
     }
 }

@@ -3,7 +3,7 @@ package io.github.iceean.serverchathistory.core;
 import java.util.List;
 
 public record HistorySnapshot(int version, long nextSequence, List<HistoryEntry> entries) {
-    public static final int VERSION = 1;
+    public static final int VERSION = 2;
 
     public HistorySnapshot {
         if (version != VERSION) throw new IllegalArgumentException("Unsupported history version: " + version);

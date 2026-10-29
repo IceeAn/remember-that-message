@@ -32,7 +32,7 @@ class ReplayVisibilityTest {
     private static final UUID SENDER = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final UUID RECIPIENT = UUID.fromString("00000000-0000-0000-0000-000000000002");
     // Visibility filtering does not access the server or component codec.
-    private final VanillaReplayTransport transport = new VanillaReplayTransport(null, new ReplayMessageCache(null));
+    private final VanillaReplayTransport transport = new VanillaReplayTransport(new ReplayMessageCache(null));
 
     @BeforeAll static void bootstrapCodecs() {
         SharedConstants.tryDetectVersion();
@@ -100,8 +100,9 @@ class ReplayVisibilityTest {
     }
 
     private static HistoryEntry chat(long sequence, FilterMask mask, boolean senderFiltering) {
-        var chat = new HistoryEntry.Chat(SENDER, "Alice", "hello", "\"hello\"", "\"Alice\"",
-                MessageCodec.encodeMask(mask), senderFiltering);
+        var filtering = mask.isEmpty() ? HistoryEntry.Filtering.NONE : mask.isFullyFiltered() ? HistoryEntry.Filtering.FULL : HistoryEntry.Filtering.PARTIAL;
+        var chat = new HistoryEntry.Chat(SENDER, "Alice", senderFiltering, filtering,
+                filtering == HistoryEntry.Filtering.PARTIAL ? "\"<Alice> h#llo\"" : null);
         return new HistoryEntry(sequence, new HistoryEntry.Message(MessageKind.CHAT, Instant.EPOCH, "\"<Alice> hello\"", chat));
     }
 

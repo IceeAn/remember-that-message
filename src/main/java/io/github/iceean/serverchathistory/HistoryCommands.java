@@ -43,7 +43,7 @@ public final class HistoryCommands {
                 })))
                 .then(literal("status").executes(context -> run(context.getSource(), (source, history) -> reply(source, "status",
                         history.size(), history.visibleSize(), history.config().active().historyLimit(),
-                        text(source, history.playerPackets() ? "unsigned" : "system"),
+                        text(source, history.config().active().replayMode() == io.github.iceean.serverchathistory.config.ModConfig.ReplayMode.AUTO ? "auto" : "system"),
                         text(source, history.config().hasError() ? "error" : "healthy"),
                         text(source, history.storageError() ? "error" : "healthy"), history.pendingWrites()))))
                 .then(literal("clear").executes(context -> run(context.getSource(), (source, history) -> {

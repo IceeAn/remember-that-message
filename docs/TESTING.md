@@ -4,35 +4,39 @@
 
 ## Automated checks
 
-Run `./gradlew clean build` using Java 25. Tests exercise history retention and order, event visibility, configuration validation/recovery, permissions policy, localization, JSON and backup recovery, world storage isolation, asynchronous clear/save races, final flush, filtering, native packet codecs, historical timestamps, and recipient-local player-info restoration after a replay failure.
+Run `./gradlew clean build` using Java 25. JUnit Jupiter checks history retention/order, configuration recovery, permissions, localization, JSON/backup recovery, world isolation, asynchronous clear/save races, final flush, filtering and recipient chat visibility. Snapshot/cache tests cover changed versus unchanged ticks, shrinking, dirty clearing, shutdown records and lazy decoding.
 
-`ReplayVisibilityTest` calls the production `visibleTo` entry point with a Mockito subclass of `ServerPlayer` and real vanilla permission sets. It covers ordinary players and every operator level across all three chat visibility settings, sender/recipient filtering, and the self-message exception. No world, connection, or attached mocking agent is required.
+Version 0.2.0 adds format-2 round trips and rejection of older formats, server-capture timestamps, filtered rich components, client configuration validation, filtering before personal limits, opt-out selection, negotiation timeout/version mismatch, missing-channel fallback and forced-system preference retention. Protocol tests exercise the real Minecraft component codec and the custom history payload codec without player-chat signature validation.
 
-Protocol tests bootstrap vanilla registries and codecs and invoke the native unsigned validator without creating a world or connecting a client. They explicitly check that packet round trips retain historical time while `SignedMessageValidator.ACCEPT_UNSIGNED` replaces it with receive time. JUnit does not apply Fabric Mixins: the player-info packet test writes the accessor's target field reflectively so the actual vanilla serialization can be tested. Successful tests therefore do not prove loader injection, event ordering in a running server, or client acceptance.
-
-Snapshot and cache regressions exercise end-of-tick persistence, unchanged ticks, immediate configuration shrinking, clearing dirty history, final shutdown records, immutable snapshot reuse, world-local cache eviction, lazy decoding, and recipient-specific filtering. WorldHistory tests use simulated server/player contexts and real files; they do not run a game server.
+Client compatibility contract tests check required Chat Patches method/field shapes and queued timestamp metadata. They do not run Chat Patches rendering or apply the mixin in a game. Server/player fixtures do not create a running world or network connection. These tests cannot establish real event ordering, actual UI behavior, disconnection cleanup, Fabric injection or live compatibility.
 
 ## Manual acceptance — separate confirmation required
 
-Use disposable test installations and worlds. Do not use real saves. Record the server/mod/client versions and settings with the result. These checks have not been completed merely because the JAR builds.
+Use disposable installations and worlds. Record exact mod/client/server versions, settings, screenshots where useful and observed outcomes. Passing compilation or automated tests does not complete this checklist. Do not use real saves or accept the EULA as part of automated checks.
 
 | Scenario | Expected result |
 | --- | --- |
-| Fabric 26.3 server, vanilla 26.3 client | Client connects without extra mods; batch includes the current enabled join announcement; next live chat works. |
-| Online mode, effective secure profiles enforced, `auto` | Player history is system chat; no historical signature/session validation error. |
-| Online mode with `enforce-secure-profile=false`, `auto` | Unsigned history displays with receive time after client validation; live signed chat works after the batch. |
-| Offline mode, `auto` | Unsigned history works; restart and sender reconnect do not cause invalid chat errors. |
-| `system` in each authentication mode | All replay is system chat; no player-info changes needed. |
-| Only Show Secure Chat enabled | Unsigned replay may be hidden; system fallback behavior and documentation agree with the client. |
-| Sender offline, renamed, or reconnected; server restart | Old sender names and stored times remain (client display has the limitation above); no temporary sender appears in Tab; current session is restored. |
-| Compatible released Chat Patches for 26.3 | Record the exact version. Version 8.0.0 shows receive time on the current unsigned replay path; system messages also lack original timestamps. Verify continued live chat. |
-| Singleplayer, LAN host with cheats off, LAN vanilla guest | Owner can administer; ordinary guest cannot; all receive their eligible history. |
-| Switch between two singleplayer worlds | Histories stay isolated; installation-level settings are shared. |
-| Private/team chat, team-only deaths, blocked Fabric events | None leak into global history. Standard public events obey vanilla gamerules. |
-| Text filtering and chat visibility | Self-message filtering follows vanilla; filtered content is not exposed in either replay mode. |
-| Event toggle, capacity shrink, invalid config/reload | Visibility, eviction, active settings, red localized notice and console logging match the README. |
-| Clear during ongoing chat, then restart and backup recovery | Pre-clear records never reappear after a successful clear; later messages remain. |
-| Stop with connected players, then restart | Final leave events are included if enabled. |
-| Long wrapped messages and a large history | Native chat limits are visible; no promised pagination or unlimited scrollback. |
+| Fabric 26.3 dedicated server, vanilla 26.3 client | Connects without client mods; eligible history uses system chat; next live chat works. No extra negotiation delay. |
+| Both sides installed; client without Chat Patches or Mod Menu | History, local commands, settings and status work independently. No standalone timestamp prefix. |
+| Online mode with secure profiles on/off; offline mode | History works without changing policy or sending temporary player identities/sessions. |
+| `auto` versus `system` | `auto` enhances compatible connections; `system` uses vanilla messages but retains accepted personal preferences. |
+| Personal limit and all event switches, mixed history | Filters before taking latest N; chronological delivery; never enlarges server history or changes live chat. |
+| Receive disabled; empty history; invalid server config | Successfully negotiated opt-out suppresses history and routine notices, including configuration errors. |
+| Config-stage timeout, unsupported protocol or missing play channel | Join continues using server defaults with a warning. Accepted/current state is shown accurately; late replies cannot change it. |
+| Disconnect/reconnect and server change | Negotiation and one-per-connection failure notices reset; global saved preferences remain. |
+| Client screen, commands and optional Mod Menu | Saving/reloading works without server permissions; saved versus current values are clear; ordinary preferences apply next connection. |
+| Chat Patches 8.0.0+26.3-fabric, enhanced path | Old player chat and all event types show server-capture time in configured timestamp, hover and context display; timezone follows Chat Patches. |
+| Chat Patches timestamp/system-time toggles, names and duplicate merging | User settings remain authoritative; event messages respect system-time settings; merging/names/logging still work. |
+| Chat Patches loading an existing chat log during replay | Queued records retain historical metadata when drained; subsequent live messages have their normal current time. |
+| Chat Patches integration disabled, then client restarted | Our Chat Patches mixin is not applied and internal metadata is not accessed; base features work. Existing Chat Patches behavior is unchanged. |
+| Unsupported Chat Patches shape or runtime adapter failure | Base history continues; one warning and actionable status; no duplicate batch replay or stale metadata on live messages. |
+| Client changes integration setting without restart | Status distinguishes saved versus startup state; restart requirement is visible. |
+| Singleplayer, LAN host with cheats off, vanilla/enhanced LAN guests | Owner can administer; ordinary guests cannot; recipient preferences and histories remain isolated. |
+| Switch between two worlds | Separate histories, shared installation configuration; no stale cached content. |
+| Private/team chat, team-only deaths, blocked broadcasts | No private/restricted messages enter public history. Public event gamerules remain respected. |
+| Filtered text, self-message exception, hidden/system-only chat, blocked senders | No filtered text leaks; visibility and client social restrictions are preserved. |
+| Event toggle, shrinking, invalid config/reload, clearing and restart | Active configuration, eviction, recovery and notices match the README; pre-clear data does not return. |
+| Stop with connected players | Final enabled leave events persist. |
+| Wrapped text and large batches | Native/Chat Patches window limits apply; no pagination or cross-tick replay is promised. |
 
-Confirm this stage before launching a Minecraft client, server gameplay session, singleplayer world, or LAN test. No EULA acceptance is part of the automated build.
+Before a performance decision, distinguish selection cost from decoding, packet encoding, real network queuing and client rendering. Background fixture benchmarks cover only the measured stages, not production TPS or end-to-end latency.

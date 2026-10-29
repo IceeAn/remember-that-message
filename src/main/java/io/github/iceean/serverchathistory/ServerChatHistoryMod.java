@@ -21,6 +21,8 @@ public final class ServerChatHistoryMod implements ModInitializer {
     public static WorldHistory history(MinecraftServer server) { return WORLDS.get(server); }
 
     @Override public void onInitialize() {
+        io.github.iceean.serverchathistory.network.HistoryProtocol.register();
+        io.github.iceean.serverchathistory.network.ServerHistoryNetworking.register();
         ServerLifecycleEvents.SERVER_STARTED.register(server -> WORLDS.put(server, new WorldHistory(server,
                 FabricLoader.getInstance().getConfigDir().resolve("server_chat_history.json"))));
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {

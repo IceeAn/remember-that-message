@@ -9,7 +9,4 @@ public interface ReplayPolicy {
     ReplayPolicy RECENT = (history, config) -> history.entries().stream()
             .filter(entry -> config.includes(entry.message().kind())).toList();
 
-    static boolean usePlayerPackets(ModConfig config, boolean secureChatEnforced) {
-        return config.replayMode() == ModConfig.ReplayMode.AUTO && !secureChatEnforced;
-    }
 }
