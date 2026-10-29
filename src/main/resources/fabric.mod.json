@@ -24,6 +24,10 @@
     {
       "config": "server_chat_history.client.mixins.json",
       "environment": "client"
+    },
+    {
+      "config": "server_chat_history.heads.mixins.json",
+      "environment": "client"
     }
   ],
   "depends": {
@@ -34,6 +38,7 @@
   },
   "suggests": {
     "modmenu": "*",
-    "chatpatches": "*"
+    "chatpatches": "*",
+    "chat_heads": "*"
   }
 }

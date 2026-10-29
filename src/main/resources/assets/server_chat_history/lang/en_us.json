@@ -45,7 +45,7 @@
   "server_chat_history.client.follow_server": "Server limit",
   "server_chat_history.client.integration_status": "%s %s: %s",
   "server_chat_history.client.integration_switch": "Message timestamp compatibility: saved=%s, startup=%s",
-  "server_chat_history.client.integration_warning": "[Chat History] Time integration is unavailable. History still works; use /chathistoryclient status for details.",
+  "server_chat_history.client.integration_warning": "[Chat History] A display integration is unavailable. History still works; use /chathistoryclient status for details.",
   "server_chat_history.client.integration_detail": "%s integration detail: %s",
   "server_chat_history.client.unverified": "Interface checks passed; live compatibility has not been verified for this installation.",
   "server_chat_history.client.reason.enhanced": "Enhanced history",
@@ -63,5 +63,9 @@
   "server_chat_history.client.narrator": "Narrator",
   "server_chat_history.client.setting.skipHistoryNarration": "Narrator skips history",
   "server_chat_history.client.narration_hint": "Applies to future enhanced history entries after saving. Turning this off still requires the Minecraft narrator. Does not clear queued speech or affect live chat, batch notices or system-message fallback.",
-  "server_chat_history.client.narration_status": "Narrator skips history: %s (local, immediate, enhanced entries only)"
+  "server_chat_history.client.narration_status": "Narrator skips history: %s (local, immediate, enhanced entries only)",
+  "server_chat_history.client.compatibility": "Compatibility",
+  "server_chat_history.client.setting.chatHeadsIntegration": "Chat Heads compatibility",
+  "server_chat_history.client.heads_switch": "Chat Heads compatibility: saved=%s, startup=%s",
+  "server_chat_history.client.heads_hint": "Uses Chat Heads settings and available player information. No additional offline profiles or skin lookups. Restart after changing compatibility settings."
 }

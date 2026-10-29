@@ -14,13 +14,22 @@ class ClientPreferencesTest {
         assertEquals(ClientConfig.DEFAULT, ClientConfig.read("{}"));
         var configured = ClientConfig.DEFAULT.with("historyLimit", "100").with("events.join", "false")
                 .with("messageTimeIntegration", "false").with("receiveHistory", "false")
-                .with("skipHistoryNarration", "false");
+                .with("skipHistoryNarration", "false").with("chatHeadsIntegration", "false");
         assertEquals(configured, ClientConfig.read(configured.write()));
         assertEquals(100, configured.preferences().historyLimit());
         assertFalse(configured.preferences().includes(MessageKind.JOIN));
         assertTrue(configured.preferences().includes(MessageKind.CHAT));
         assertFalse(configured.skipHistoryNarration());
         assertEquals("false", configured.get("skipHistoryNarration"));
+        assertFalse(configured.chatHeadsIntegration());
+    }
+    @Test void headsPreferenceIsIndependentOfTimeAndNegotiatedPreferences() {
+        assertTrue(ClientConfig.read("{}").chatHeadsIntegration());
+        var heads = ClientConfig.DEFAULT.with("messageTimeIntegration", "false");
+        assertTrue(heads.chatHeadsIntegration());
+        var time = ClientConfig.DEFAULT.with("chatHeadsIntegration", "false");
+        assertTrue(time.messageTimeIntegration());
+        assertEquals(heads.preferences(), time.preferences());
     }
     @Test void existingClientFilesDefaultToSkippingNarrationWithoutChangingNegotiatedPreferences() {
         var existing = ClientConfig.read("{\"historyLimit\":20,\"messageTimeIntegration\":false}");
@@ -65,7 +74,8 @@ class ClientPreferencesTest {
                 "{\"receiveHistory\":\"false\"}", "{\"events\":{\"private\":true}}", "{\"unknown\":true}",
                 "{\"skipHistoryNarration\":null}", "{\"skipHistoryNarration\":0}",
                 "{\"messageTimeIntegration\":\"false\"}", "{\"messageTimeIntegration\":null}",
-                "{\"messageTimeIntegration\":0}"))
+                "{\"messageTimeIntegration\":0}", "{\"chatHeadsIntegration\":0}",
+                "{\"chatHeadsIntegration\":null}", "{\"chatHeadsIntegration\":\"true\"}"))
             assertThrows(RuntimeException.class, () -> ClientConfig.read(json));
     }
     @Test void filtersBeforeLimitAndKeepsOriginalOrder() {

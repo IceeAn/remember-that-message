@@ -18,6 +18,7 @@ import static io.github.iceean.serverchathistory.client.ClientText.text;
 public final class HistoryClient implements ClientModInitializer {
     public static final ClientConfigStore CONFIG = new ClientConfigStore(FabricLoader.getInstance().getConfigDir().resolve("server_chat_history-client.json"));
     private static final HistoryTimeIntegrations INTEGRATIONS = HistoryTimeIntegrations.createDefault();
+    private static final ChatHeadsAdapter HEADS = ChatHeadsAdapter.INSTANCE;
     private static volatile HistoryProtocol.Status status;
     private static boolean batch;
     private static int remaining;
@@ -32,6 +33,10 @@ public final class HistoryClient implements ClientModInitializer {
             ServerChatHistoryMod.LOGGER.warn("History time integration {} disabled: {}", adapter.id(), failure);
             pendingWarning = true;
         });
+        HEADS.onFailure(failure -> {
+            ServerChatHistoryMod.LOGGER.warn("Chat Heads history integration disabled: {}", failure);
+            pendingWarning = true;
+        });
         ClientConfigurationConnectionEvents.INIT.register((listener, client) -> reset());
         ClientConfigurationNetworking.registerGlobalReceiver(HistoryProtocol.Hello.TYPE, (payload, context) -> {
             if (ClientConfigurationNetworking.canSend(HistoryProtocol.Preferences.TYPE))
@@ -40,6 +45,7 @@ public final class HistoryClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Status.TYPE, (payload, context) -> {
             status = payload;
             if (payload.enhanced() && IntegrationBootstrap.ENABLED && INTEGRATIONS.hasUnavailableIntegration()) pendingWarning = true;
+            if (payload.enhanced() && ChatHeadsBootstrap.ENABLED && !HEADS.enabled() && !HEADS.state().equals("absent")) pendingWarning = true;
         });
         ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Boundary.TYPE, (payload, context) -> {
             if (payload.start()) { batch = true; remaining = payload.count(); lastSequence = 0; }
@@ -55,7 +61,8 @@ public final class HistoryClient implements ClientModInitializer {
                     && (client.isBlocked(payload.senderId()) || client.isFriendOnlyRestricted(payload.senderId()));
             HistoryMessageDisplay.display(payload, player.chatAbilities(), senderRestricted, CONFIG.active().skipHistoryNarration(),
                     insert -> INTEGRATIONS.display(payload, insert),
-                    content -> client.gui.hud.getChat().addServerSystemMessage(content),
+                    content -> HEADS.display(payload, id -> client.getConnection().getPlayerInfo(id),
+                            decorated -> client.gui.hud.getChat().addServerSystemMessage(decorated)),
                     content -> client.getNarrator().saySystemChatQueued(content));
         });
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> reset());
@@ -72,6 +79,7 @@ public final class HistoryClient implements ClientModInitializer {
     private static void reset() {
         status = null; batch = false; remaining = 0; lastSequence = 0; pendingWarning = false; warned = false;
         INTEGRATIONS.resetConnection();
+        HEADS.resetConnection();
     }
     public static List<Component> statusLines() {
         var lines = new ArrayList<Component>();
@@ -86,7 +94,10 @@ public final class HistoryClient implements ClientModInitializer {
             lines.add(text("integration_status", adapter.name(), adapter.version(), text("integration." + adapter.state())));
             if (adapter.failure() != null) lines.add(text("integration_detail", adapter.name(), adapter.failure()));
         }
-        if (INTEGRATIONS.hasEnabledIntegration()) lines.add(text("unverified"));
+        lines.add(text("heads_switch", saved.chatHeadsIntegration(), ChatHeadsBootstrap.ENABLED));
+        lines.add(text("integration_status", "Chat Heads", HEADS.version(), text("integration." + HEADS.state())));
+        if (HEADS.failure() != null) lines.add(text("integration_detail", "Chat Heads", HEADS.failure()));
+        if (INTEGRATIONS.hasEnabledIntegration() || HEADS.enabled()) lines.add(text("unverified"));
         if (CONFIG.error() != null) lines.add(text("config_error", CONFIG.error()));
         return lines;
     }

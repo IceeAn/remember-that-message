@@ -30,7 +30,7 @@ Use disposable installations and worlds. Record exact mod/client/server versions
 | Chat Patches 8.0.0+26.3-fabric, enhanced path | Old player chat and all event types show server-capture time in configured timestamp, hover and context display; timezone follows Chat Patches. |
 | Chat Patches timestamp/system-time toggles, names and duplicate merging | User settings remain authoritative; event messages respect system-time settings; merging/names/logging still work. |
 | Chat Patches loading an existing chat log during replay | Queued records retain historical metadata when drained; subsequent live messages have their normal current time. |
-| Message timestamp compatibility disabled, then client restarted | Our Chat Patches mixin is not applied and internal metadata is not accessed; base features work. Existing Chat Patches behavior is unchanged. |
+| Message timestamp compatibility disabled, then client restarted | Our Chat Patches time mixin is not applied and time metadata is not accessed; base features work. Existing Chat Patches behavior is unchanged. |
 | Unsupported Chat Patches shape or runtime adapter failure | Base history continues; one warning and actionable status; no duplicate batch replay or stale metadata on live messages. |
 | Client changes integration setting without restart | Status distinguishes saved versus startup state; restart requirement is visible. |
 | Singleplayer, LAN host with cheats off, vanilla/enhanced LAN guests | Owner can administer; ordinary guests cannot; recipient preferences and histories remain isolated. |
@@ -48,3 +48,18 @@ Use disposable installations and worlds. Record exact mod/client/server versions
 Before a performance decision, distinguish selection cost from decoding, packet encoding, real network queuing and client rendering. Background fixture benchmarks cover only the measured stages, not production TPS or end-to-end latency.
 
 Configuration and integration-manager regressions cover the message timestamp compatibility setting, saves/reloads, and nested scopes, failure reporting and connection resets with multiple simulated adapters. Chat Patches remains the only production adapter; these tests do not establish compatibility between multiple third-party mods.
+
+## Chat Heads acceptance
+
+The automated adapter tests cover exact UUID lookup, missing-player delegation, event isolation, metadata restoration, equal-text queue identity, connection cleanup, independent settings and no retries after insertion starts. Headless checks verify actual optional mixin transformation, not rendering or live compatibility.
+
+| Scenario | Expected result |
+| --- | --- |
+| Chat Heads 1.3.2 alone; online sender | Enhanced player history uses the sender's head according to Chat Heads settings. |
+| Chat Heads plus Chat Patches 8.0.0 | Heads and historical times both work; no duplicate head with name formatting or duplicate merging. |
+| Before-name / before-line placement; wrapped text and refresh | Placement and associated sender survive wrapping and rebuilding the HUD. |
+| Chat Patches loading old logs; two senders with identical text | Queued history retains each sender's head and timestamp; no stale head reaches live chat or events. |
+| Sender offline or absent from current player information | Existing Chat Heads detection applies; full offline avatars are not required and no extra lookup/cache is added. |
+| Time integration off, heads on / heads off, time on | The independent enabled capability remains; disabling heads and restarting removes our head queue hook. |
+| Account restriction, blocked sender, narrator skipping | Rejected chat never reaches the head adapter; narration uses the original text and existing policy. |
+| Unsupported interface, reset, 10000 entries | Basic history remains available, no duplicate insertion, connection metadata cleared; no per-message offline requests. |

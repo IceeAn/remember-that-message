@@ -87,6 +87,7 @@
 /chathistoryclient config set events.join false
 /chathistoryclient config set receiveHistory false
 /chathistoryclient config set messageTimeIntegration false
+/chathistoryclient config set chatHeadsIntegration false
 /chathistoryclient config set skipHistoryNarration false
 /chathistoryclient reload
 ```
@@ -99,6 +100,7 @@
 | `historyLimit` | `0` 跟随服务端；正整数限制符合条件的条数。 |
 | `events.join`、`events.leave`、`events.death`、`events.advancement` | 全部 `true`；仅筛选历史，不过滤实时聊天或更改服务端存储。 |
 | `messageTimeIntegration` | `true`；启用已支持的消息时间显示兼容（目前仅 Chat Patches），更改需要**重启客户端**。 |
+| `chatHeadsIntegration` | `true`；让 Chat Heads 使用现有玩家资料处理玩家历史头像，独立于时间兼容；更改需要**重启客户端**。 |
 | `skipHistoryNarration` | `true`；“旁白跳过历史”，跳过增强历史正文，不开启或关闭 Minecraft 自带旁白。 |
 
 接收偏好**下次连接生效**，不删除、重新插入或改写现有聊天及 Chat Patches 日志。服务端先按自己的策略、接收者可见性及个人事件偏好筛选，再取最近 N 条符合条件的记录，从旧到新发送。个人偏好只能缩小服务端已保留的范围。
@@ -117,7 +119,15 @@
 
 目标为 **Chat Patches 8.0.0+26.3-fabric**。其他版本通过必要接口与字节码检查后可尝试适配；检查通过**不代表已完成实际游戏兼容性验证**，客户端状态会标明尚未实测。不兼容或运行异常会停用适配、保留原因并在本次连接提示一次，基础历史功能仍可用，不重新补发已经显示的整批记录。
 
-设置 `messageTimeIntegration=false` 并重启后，本模组**不应用 Chat Patches Mixin，也不访问其内部消息元数据**。Chat Patches 自身仍按自己的设置处理普通聊天；该开关不关闭本模组独立的网络协议和个人偏好。
+设置 `messageTimeIntegration=false` 并重启后，本模组**不应用 Chat Patches 时间 Mixin，也不访问其时间元数据**。Chat Patches 自身仍按自己的设置处理普通聊天；该开关不关闭本模组独立的网络协议和个人偏好。
+
+## Chat Heads 头像兼容
+
+设置界面的“兼容”页提供独立的时间与 Chat Heads 开关。针对 **Chat Heads 1.3.2（26.3）**，增强玩家历史通过发送者 UUID 查询当前连接的玩家资料，交给它原有的头像识别逻辑；检测、头像位置及渲染设置仍由 Chat Heads 决定。本适配不为事件主动添加玩家头像。查不到玩家资料时沿用 Chat Heads 自己的识别，不新增离线资料缓存、皮肤请求或虚假玩家列表条目，不保证离线头像或发言当时的皮肤。
+
+同时安装 **Chat Patches 8.0.0+26.3-fabric** 时，可选队列钩子在其加载旧日志期间保留每条历史的头像元数据，出队时恢复，避免重复装饰。这个头像专用的 Chat Patches 钩子独立于 `messageTimeIntegration`，单独关闭时间兼容不会关闭它。设置 `chatHeadsIntegration=false` 并重启，才会关闭本模组的头像适配及队列钩子；Chat Heads 自身对普通消息的处理仍保留。缺失或不支持的适配不会禁用基础历史；状态显示具体原因，运行错误会停用本次连接的头像适配。
+
+完整离线头像支持保留为后续事项。自动测试与无窗口类变换检查不能替代游戏内的头像位置、重复合并和旧日志加载验收。
 
 原版最多保留 100 条消息及 100 行渲染文本，换行和批次提示也占用额度；扩大服务端容量不会扩大客户端聊天窗口。回放仍在入服 tick 内完成，不分页，也不跨 tick 分批。
 

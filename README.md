@@ -87,6 +87,7 @@ Use `/chathistoryclient` for the settings screen (also available through Mod Men
 /chathistoryclient config set events.join false
 /chathistoryclient config set receiveHistory false
 /chathistoryclient config set messageTimeIntegration false
+/chathistoryclient config set chatHeadsIntegration false
 /chathistoryclient config set skipHistoryNarration false
 /chathistoryclient reload
 ```
@@ -99,6 +100,7 @@ These are local commands requiring no server permission. `config/server_chat_his
 | `historyLimit` | `0` follows the server; a positive integer limits eligible records. |
 | `events.join`, `events.leave`, `events.death`, `events.advancement` | All `true`; filter history only, not live chat or server storage. |
 | `messageTimeIntegration` | `true`; enables supported historical-time integrations (currently Chat Patches only). Changes require a **client restart**. |
+| `chatHeadsIntegration` | `true`; lets Chat Heads process player history using available player information. Independent of time integration; requires a **client restart**. |
 | `skipHistoryNarration` | `true`; skips enhanced history entries in narration without enabling or disabling Minecraft's narrator. |
 
 Receiving preference changes apply on the **next connection**. They do not remove, reinsert or rewrite existing chat or Chat Patches logs. The server filters by its own policy, recipient visibility and personal event preferences **before** selecting the latest N eligible records, then sends them oldest first. Preferences can only narrow retained server history.
@@ -117,7 +119,15 @@ With both sides installed, server `auto`, and compatible Chat Patches integratio
 
 The target is **Chat Patches 8.0.0+26.3-fabric**. Other versions are attempted only if the required interface/bytecode checks pass. Passing those checks is **not a completed live compatibility test**; client status marks the integration as unverified in game. An incompatibility or runtime failure disables the adapter, reports the reason and warns once per connection while basic history remains available. Already displayed batches are not resent.
 
-After setting `messageTimeIntegration=false` and restarting, this mod applies **no Chat Patches Mixin and accesses no Chat Patches internal metadata**. Chat Patches itself still processes ordinary chat according to its own settings. The switch does not disable this mod's independent networking or preferences.
+After setting `messageTimeIntegration=false` and restarting, this mod applies **no Chat Patches time Mixin and accesses no Chat Patches time metadata**. Chat Patches itself still processes ordinary chat according to its own settings. The switch does not disable this mod's independent networking or preferences.
+
+## Chat Heads compatibility
+
+The Compatibility tab contains separate time and Chat Heads toggles. With Chat Heads **1.3.2 for 26.3**, enhanced player history enters its existing head-detection logic using the sender UUID and the current connection's player information. Its detection, placement and rendering settings remain authoritative. Events do not receive a player head through this adapter. A missing player profile falls back to Chat Heads' own detection; this mod adds no offline profile cache, skin requests or fake player-list entries, and does not promise offline avatars or historical skins.
+
+When Chat Patches **8.0.0+26.3-fabric** is also installed, an optional queue hook retains head metadata while its log loads, then restores it during insertion without decorating twice. This head-specific Chat Patches hook is independent of `messageTimeIntegration`; disabling time integration alone does not disable it. To disable this mod's head integration and queue hook, set `chatHeadsIntegration=false` and restart. Chat Heads' own behavior on ordinary messages remains intact. Missing/unsupported integrations leave basic history available; `status` lists their state and a runtime error disables head integration for the connection.
+
+The implementation uses available player information only. Supporting full offline avatars remains future work. Automated tests and headless class transformation checks do not replace in-game checks of rendering, merged messages or loading existing logs.
 
 Vanilla retains at most 100 chat messages and 100 rendered lines. Wrapping and batch notices consume that budget; a larger server limit does not enlarge it. Replay remains within the join tick, without pagination or interleaved tick batches.
 

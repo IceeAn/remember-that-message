@@ -33,9 +33,9 @@
   "server_chat_history.client.setting.events.death": "死亡",
   "server_chat_history.client.setting.events.advancement": "进度",
   "server_chat_history.client.limit_label": "最大接收条数（0 = 跟随服务端）",
-  "server_chat_history.client.settings_hint": "接收设置下次入服生效；旁白跳过立即生效；消息时间显示兼容开关需重启。",
+  "server_chat_history.client.settings_hint": "接收设置下次入服生效；旁白跳过立即生效；兼容开关需重启。",
   "server_chat_history.client.restart_hint": "重启 Minecraft 后生效。关闭状态启动时不加载兼容钩子。",
-  "server_chat_history.client.saved": "已保存。接收设置下次入服生效；旁白跳过立即生效；消息时间显示兼容开关需重启。",
+  "server_chat_history.client.saved": "已保存。接收设置下次入服生效；旁白跳过立即生效；兼容开关需重启。",
   "server_chat_history.client.invalid_limit": "请输入 0 或正整数。",
   "server_chat_history.client.config_error": "客户端配置错误：%s",
   "server_chat_history.client.connection": "连接：%s",
@@ -45,7 +45,7 @@
   "server_chat_history.client.follow_server": "跟随服务端",
   "server_chat_history.client.integration_status": "%s %s：%s",
   "server_chat_history.client.integration_switch": "消息时间显示兼容开关：已保存=%s，启动时=%s",
-  "server_chat_history.client.integration_warning": "[聊天历史] 部分时间适配不可用，仍正常接收历史。详情见 /chathistoryclient status。",
+  "server_chat_history.client.integration_warning": "[聊天历史] 部分显示兼容不可用，仍正常接收历史。详情见 /chathistoryclient status。",
   "server_chat_history.client.integration_detail": "%s 适配详情：%s",
   "server_chat_history.client.unverified": "接口检查已通过；此安装环境的真实游戏兼容性尚未验证。",
   "server_chat_history.client.reason.enhanced": "增强历史",
@@ -63,5 +63,9 @@
   "server_chat_history.client.narrator": "旁白",
   "server_chat_history.client.setting.skipHistoryNarration": "旁白跳过历史",
   "server_chat_history.client.narration_hint": "保存后对后续增强历史正文生效。关闭跳过仍需开启 Minecraft 自带旁白。不会清除已排队语音；不影响实时聊天、起止提示或系统消息回退。",
-  "server_chat_history.client.narration_status": "旁白跳过历史：%s（本地即时生效，仅增强历史正文）"
+  "server_chat_history.client.narration_status": "旁白跳过历史：%s（本地即时生效，仅增强历史正文）",
+  "server_chat_history.client.compatibility": "兼容",
+  "server_chat_history.client.setting.chatHeadsIntegration": "Chat Heads 头像兼容",
+  "server_chat_history.client.heads_switch": "Chat Heads 头像兼容：已保存=%s，启动时=%s",
+  "server_chat_history.client.heads_hint": "沿用 Chat Heads 设置及现有玩家资料，不额外查询离线资料或皮肤。兼容开关修改后需重启。"
 }
