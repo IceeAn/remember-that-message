@@ -86,7 +86,7 @@
 /chathistoryclient config set historyLimit 100
 /chathistoryclient config set events.join false
 /chathistoryclient config set receiveHistory false
-/chathistoryclient config set chatPatchesIntegration false
+/chathistoryclient config set messageTimeIntegration false
 /chathistoryclient config set skipHistoryNarration false
 /chathistoryclient reload
 ```
@@ -98,7 +98,7 @@
 | `receiveHistory` | `true`；关闭后，在协商成功时不接收历史及开始、结束、空历史、配置错误提示。 |
 | `historyLimit` | `0` 跟随服务端；正整数限制符合条件的条数。 |
 | `events.join`、`events.leave`、`events.death`、`events.advancement` | 全部 `true`；仅筛选历史，不过滤实时聊天或更改服务端存储。 |
-| `chatPatchesIntegration` | `true`；更改需要**重启客户端**。 |
+| `messageTimeIntegration` | `true`；启用已支持的消息时间显示兼容（目前仅 Chat Patches），更改需要**重启客户端**。 |
 | `skipHistoryNarration` | `true`；“旁白跳过历史”，跳过增强历史正文，不开启或关闭 Minecraft 自带旁白。 |
 
 接收偏好**下次连接生效**，不删除、重新插入或改写现有聊天及 Chat Patches 日志。服务端先按自己的策略、接收者可见性及个人事件偏好筛选，再取最近 N 条符合条件的记录，从旧到新发送。个人偏好只能缩小服务端已保留的范围。
@@ -117,7 +117,7 @@
 
 目标为 **Chat Patches 8.0.0+26.3-fabric**。其他版本通过必要接口与字节码检查后可尝试适配；检查通过**不代表已完成实际游戏兼容性验证**，客户端状态会标明尚未实测。不兼容或运行异常会停用适配、保留原因并在本次连接提示一次，基础历史功能仍可用，不重新补发已经显示的整批记录。
 
-设置 `chatPatchesIntegration=false` 并重启后，本模组**不应用 Chat Patches Mixin，也不访问其内部消息元数据**。Chat Patches 自身仍按自己的设置处理普通聊天；该开关不关闭本模组独立的网络协议和个人偏好。
+设置 `messageTimeIntegration=false` 并重启后，本模组**不应用 Chat Patches Mixin，也不访问其内部消息元数据**。Chat Patches 自身仍按自己的设置处理普通聊天；该开关不关闭本模组独立的网络协议和个人偏好。
 
 原版最多保留 100 条消息及 100 行渲染文本，换行和批次提示也占用额度；扩大服务端容量不会扩大客户端聊天窗口。回放仍在入服 tick 内完成，不分页，也不跨 tick 分批。
 

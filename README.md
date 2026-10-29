@@ -86,7 +86,7 @@ Use `/chathistoryclient` for the settings screen (also available through Mod Men
 /chathistoryclient config set historyLimit 100
 /chathistoryclient config set events.join false
 /chathistoryclient config set receiveHistory false
-/chathistoryclient config set chatPatchesIntegration false
+/chathistoryclient config set messageTimeIntegration false
 /chathistoryclient config set skipHistoryNarration false
 /chathistoryclient reload
 ```
@@ -98,7 +98,7 @@ These are local commands requiring no server permission. `config/server_chat_his
 | `receiveHistory` | `true`; disabling suppresses history and its start/end, empty and configuration-error notices after successful negotiation. |
 | `historyLimit` | `0` follows the server; a positive integer limits eligible records. |
 | `events.join`, `events.leave`, `events.death`, `events.advancement` | All `true`; filter history only, not live chat or server storage. |
-| `chatPatchesIntegration` | `true`; changes require a **client restart**. |
+| `messageTimeIntegration` | `true`; enables supported historical-time integrations (currently Chat Patches only). Changes require a **client restart**. |
 | `skipHistoryNarration` | `true`; skips enhanced history entries in narration without enabling or disabling Minecraft's narrator. |
 
 Receiving preference changes apply on the **next connection**. They do not remove, reinsert or rewrite existing chat or Chat Patches logs. The server filters by its own policy, recipient visibility and personal event preferences **before** selecting the latest N eligible records, then sends them oldest first. Preferences can only narrow retained server history.
@@ -117,7 +117,7 @@ With both sides installed, server `auto`, and compatible Chat Patches integratio
 
 The target is **Chat Patches 8.0.0+26.3-fabric**. Other versions are attempted only if the required interface/bytecode checks pass. Passing those checks is **not a completed live compatibility test**; client status marks the integration as unverified in game. An incompatibility or runtime failure disables the adapter, reports the reason and warns once per connection while basic history remains available. Already displayed batches are not resent.
 
-After setting `chatPatchesIntegration=false` and restarting, this mod applies **no Chat Patches Mixin and accesses no Chat Patches internal metadata**. Chat Patches itself still processes ordinary chat according to its own settings. The switch does not disable this mod's independent networking or preferences.
+After setting `messageTimeIntegration=false` and restarting, this mod applies **no Chat Patches Mixin and accesses no Chat Patches internal metadata**. Chat Patches itself still processes ordinary chat according to its own settings. The switch does not disable this mod's independent networking or preferences.
 
 Vanilla retains at most 100 chat messages and 100 rendered lines. Wrapping and batch notices consume that budget; a larger server limit does not enlarge it. Replay remains within the join tick, without pagination or interleaved tick batches.
 

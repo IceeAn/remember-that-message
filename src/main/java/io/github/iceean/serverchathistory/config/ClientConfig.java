@@ -6,13 +6,13 @@ import io.github.iceean.serverchathistory.storage.JsonSupport;
 import java.util.List;
 import java.util.Set;
 
-public record ClientConfig(ReplayPreferences preferences, boolean chatPatchesIntegration, boolean skipHistoryNarration) {
+public record ClientConfig(ReplayPreferences preferences, boolean messageTimeIntegration, boolean skipHistoryNarration) {
     public static final ClientConfig DEFAULT = new ClientConfig(ReplayPreferences.DEFAULT, true, true);
     public static final List<String> KEYS = List.of("receiveHistory", "historyLimit", "events.join", "events.leave",
-            "events.death", "events.advancement", "chatPatchesIntegration", "skipHistoryNarration");
+            "events.death", "events.advancement", "messageTimeIntegration", "skipHistoryNarration");
     public static ClientConfig read(String text) {
         var root = JsonParser.parseString(text).getAsJsonObject();
-        for (var key : root.keySet()) if (!Set.of("receiveHistory", "historyLimit", "events", "chatPatchesIntegration", "skipHistoryNarration").contains(key))
+        for (var key : root.keySet()) if (!Set.of("receiveHistory", "historyLimit", "events", "messageTimeIntegration", "skipHistoryNarration").contains(key))
             throw new IllegalArgumentException("Unknown setting: " + key);
         long limit = 0;
         if (root.has("historyLimit")) {
@@ -27,7 +27,8 @@ public record ClientConfig(ReplayPreferences preferences, boolean chatPatchesInt
         for (var kind : MessageKind.values()) if (kind != MessageKind.CHAT && bool(events, kind.name().toLowerCase(java.util.Locale.ROOT)))
             mask |= ReplayPreferences.bit(kind);
         return new ClientConfig(new ReplayPreferences(bool(root, "receiveHistory"), limit, mask),
-                bool(root, "chatPatchesIntegration"), bool(root, "skipHistoryNarration"));
+                bool(root, "messageTimeIntegration"),
+                bool(root, "skipHistoryNarration"));
     }
     private static boolean bool(JsonObject object, String key) {
         if (!object.has(key)) return true;
@@ -41,7 +42,7 @@ public record ClientConfig(ReplayPreferences preferences, boolean chatPatchesInt
         var events = new JsonObject();
         for (var kind : MessageKind.values()) if (kind != MessageKind.CHAT)
             events.addProperty(kind.name().toLowerCase(java.util.Locale.ROOT), preferences.includes(kind));
-        root.add("events", events); root.addProperty("chatPatchesIntegration", chatPatchesIntegration);
+        root.add("events", events); root.addProperty("messageTimeIntegration", messageTimeIntegration);
         root.addProperty("skipHistoryNarration", skipHistoryNarration);
         return JsonSupport.GSON.toJson(root) + "\n";
     }

@@ -26,7 +26,7 @@ public final class HistoryConfigScreen extends Screen {
         limit = null;
         if (page == 0) {
             toggle("receiveHistory", x, 58, w);
-            toggle("chatPatchesIntegration", x, 84, w);
+            toggle("messageTimeIntegration", x, 84, w);
             addRenderableWidget(new MultiLineTextWidget(x, 114, text("limit_label"), font).setMaxWidth(w));
             limit = addRenderableWidget(new EditBox(font, x, 130, w, 20, text("limit_label")));
             limit.setMaxLength(19); limit.setValue(draft.get("historyLimit"));
@@ -50,7 +50,7 @@ public final class HistoryConfigScreen extends Screen {
         var button = Button.builder(label(key), pressed -> {
             draft = draft.with(key, Boolean.toString(!Boolean.parseBoolean(draft.get(key)))); pressed.setMessage(label(key));
         }).bounds(x, y, w, 20).build();
-        if (key.equals("chatPatchesIntegration")) button.setTooltip(Tooltip.create(text("restart_hint")));
+        if (key.equals("messageTimeIntegration")) button.setTooltip(Tooltip.create(text("restart_hint")));
         addRenderableWidget(button);
     }
     private Component label(String key) { return text("toggle", text("setting." + key), text(Boolean.parseBoolean(draft.get(key)) ? "on" : "off")); }

@@ -17,7 +17,7 @@ import static io.github.iceean.serverchathistory.client.ClientText.text;
 
 public final class HistoryClient implements ClientModInitializer {
     public static final ClientConfigStore CONFIG = new ClientConfigStore(FabricLoader.getInstance().getConfigDir().resolve("server_chat_history-client.json"));
-    public static final ChatPatchesAdapter ADAPTER = new ChatPatchesAdapter();
+    private static final HistoryTimeIntegrations INTEGRATIONS = HistoryTimeIntegrations.createDefault();
     private static volatile HistoryProtocol.Status status;
     private static boolean batch;
     private static int remaining;
@@ -28,8 +28,8 @@ public final class HistoryClient implements ClientModInitializer {
 
     @Override public void onInitializeClient() {
         CONFIG.reload();
-        ADAPTER.onFailure(failure -> {
-            ServerChatHistoryMod.LOGGER.warn("Chat Patches history integration disabled: {}", failure);
+        INTEGRATIONS.onFailure((adapter, failure) -> {
+            ServerChatHistoryMod.LOGGER.warn("History time integration {} disabled: {}", adapter.id(), failure);
             pendingWarning = true;
         });
         ClientConfigurationConnectionEvents.INIT.register((listener, client) -> reset());
@@ -39,8 +39,7 @@ public final class HistoryClient implements ClientModInitializer {
         });
         ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Status.TYPE, (payload, context) -> {
             status = payload;
-            if (payload.enhanced() && IntegrationBootstrap.ENABLED && !ADAPTER.enabled()
-                    && !ADAPTER.state().equals("absent")) pendingWarning = true;
+            if (payload.enhanced() && IntegrationBootstrap.ENABLED && INTEGRATIONS.hasUnavailableIntegration()) pendingWarning = true;
         });
         ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Boundary.TYPE, (payload, context) -> {
             if (payload.start()) { batch = true; remaining = payload.count(); lastSequence = 0; }
@@ -55,7 +54,7 @@ public final class HistoryClient implements ClientModInitializer {
             boolean senderRestricted = payload.senderId() != null
                     && (client.isBlocked(payload.senderId()) || client.isFriendOnlyRestricted(payload.senderId()));
             HistoryMessageDisplay.display(payload, player.chatAbilities(), senderRestricted, CONFIG.active().skipHistoryNarration(),
-                    insert -> ADAPTER.display(payload, insert),
+                    insert -> INTEGRATIONS.display(payload, insert),
                     content -> client.gui.hud.getChat().addServerSystemMessage(content),
                     content -> client.getNarrator().saySystemChatQueued(content));
         });
@@ -72,7 +71,7 @@ public final class HistoryClient implements ClientModInitializer {
     }
     private static void reset() {
         status = null; batch = false; remaining = 0; lastSequence = 0; pendingWarning = false; warned = false;
-        ADAPTER.resetConnection();
+        INTEGRATIONS.resetConnection();
     }
     public static List<Component> statusLines() {
         var lines = new ArrayList<Component>();
@@ -82,11 +81,13 @@ public final class HistoryClient implements ClientModInitializer {
         lines.add(text("saved_preferences", saved.preferences().receiveHistory(), limit(saved.preferences().historyLimit()), events(saved.preferences())));
         lines.add(text("narration_status", text(saved.skipHistoryNarration() ? "on" : "off")));
         if (current != null) lines.add(text("active_preferences", current.preferences().receiveHistory(), limit(current.preferences().historyLimit()), events(current.preferences())));
-        lines.add(text("integration_status", ADAPTER.version(), text("integration." + ADAPTER.state())));
-        lines.add(text("integration_switch", saved.chatPatchesIntegration(), IntegrationBootstrap.ENABLED));
-        if (ADAPTER.enabled()) lines.add(text("unverified"));
+        lines.add(text("integration_switch", saved.messageTimeIntegration(), IntegrationBootstrap.ENABLED));
+        for (var adapter : INTEGRATIONS.adapters()) {
+            lines.add(text("integration_status", adapter.name(), adapter.version(), text("integration." + adapter.state())));
+            if (adapter.failure() != null) lines.add(text("integration_detail", adapter.name(), adapter.failure()));
+        }
+        if (INTEGRATIONS.hasEnabledIntegration()) lines.add(text("unverified"));
         if (CONFIG.error() != null) lines.add(text("config_error", CONFIG.error()));
-        if (ADAPTER.failure() != null) lines.add(text("integration_detail", ADAPTER.failure()));
         return lines;
     }
     private static Component events(ReplayPreferences preferences) {

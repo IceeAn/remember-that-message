@@ -13,7 +13,7 @@ class ClientPreferencesTest {
     @Test void defaultAndAllSettingsRoundTrip() {
         assertEquals(ClientConfig.DEFAULT, ClientConfig.read("{}"));
         var configured = ClientConfig.DEFAULT.with("historyLimit", "100").with("events.join", "false")
-                .with("chatPatchesIntegration", "false").with("receiveHistory", "false")
+                .with("messageTimeIntegration", "false").with("receiveHistory", "false")
                 .with("skipHistoryNarration", "false");
         assertEquals(configured, ClientConfig.read(configured.write()));
         assertEquals(100, configured.preferences().historyLimit());
@@ -23,9 +23,19 @@ class ClientPreferencesTest {
         assertEquals("false", configured.get("skipHistoryNarration"));
     }
     @Test void existingClientFilesDefaultToSkippingNarrationWithoutChangingNegotiatedPreferences() {
-        var existing = ClientConfig.read("{\"historyLimit\":20,\"chatPatchesIntegration\":false}");
+        var existing = ClientConfig.read("{\"historyLimit\":20,\"messageTimeIntegration\":false}");
         assertTrue(existing.skipHistoryNarration());
         assertEquals(existing.preferences(), existing.with("skipHistoryNarration", "false").preferences());
+    }
+    @Test void timeIntegrationUpdatesOnSaveAndReloadWithoutChangingNegotiatedPreferences() throws Exception {
+        var file = directory.resolve("client.json");
+        var store = new ClientConfigStore(file);
+        assertTrue(store.reload()); assertTrue(store.active().messageTimeIntegration());
+        var preferences = store.active().preferences();
+        store.save(store.active().with("messageTimeIntegration", "false"));
+        assertEquals("false", store.active().get("messageTimeIntegration"));
+        assertTrue(store.reload()); assertFalse(store.active().messageTimeIntegration());
+        assertEquals(preferences, store.active().preferences());
     }
     @Test void narrationPreferenceUpdatesLocallyOnSaveAndReload() throws Exception {
         var file = directory.resolve("client.json"); var store = new ClientConfigStore(file);
@@ -53,7 +63,9 @@ class ClientPreferencesTest {
     @Test void rejectsFractionalOverflowAndWrongTypes() {
         for (String json : List.of("{\"historyLimit\":1.2}", "{\"historyLimit\":9223372036854775808}",
                 "{\"receiveHistory\":\"false\"}", "{\"events\":{\"private\":true}}", "{\"unknown\":true}",
-                "{\"skipHistoryNarration\":null}", "{\"skipHistoryNarration\":0}"))
+                "{\"skipHistoryNarration\":null}", "{\"skipHistoryNarration\":0}",
+                "{\"messageTimeIntegration\":\"false\"}", "{\"messageTimeIntegration\":null}",
+                "{\"messageTimeIntegration\":0}"))
             assertThrows(RuntimeException.class, () -> ClientConfig.read(json));
     }
     @Test void filtersBeforeLimitAndKeepsOriginalOrder() {

@@ -13,7 +13,7 @@ public final class ChatPatchesMixinPlugin implements IMixinConfigPlugin {
     private boolean candidate;
     public void onLoad(String mixinPackage) {
         if (!IntegrationBootstrap.ENABLED) return;
-        if (!FabricLoader.getInstance().isModLoaded("chatpatches")) { IntegrationBootstrap.reason = "absent"; return; }
+        if (!FabricLoader.getInstance().isModLoaded("chatpatches")) { ChatPatchesBootstrap.reason = "absent"; return; }
         try {
             var config = node("config/Config");
             var util = node("util/ChatUtil");
@@ -21,8 +21,8 @@ public final class ChatPatchesMixinPlugin implements IMixinConfigPlugin {
             var log = node("ChatLog");
             boolean valid = compatible(config, util, data, log);
             candidate = valid;
-            IntegrationBootstrap.reason = valid ? "checking" : "incompatible";
-        } catch (Exception failure) { IntegrationBootstrap.reason = "incompatible"; }
+            ChatPatchesBootstrap.reason = valid ? "checking" : "incompatible";
+        } catch (Exception failure) { ChatPatchesBootstrap.reason = "incompatible"; }
     }
     static boolean compatible(ClassNode config, ClassNode util, ClassNode data, ClassNode log) {
         return method(config, "makeTimestamp", "(Ljava/util/Date;ZZ)Lnet/minecraft/network/chat/MutableComponent;")
@@ -55,6 +55,6 @@ public final class ChatPatchesMixinPlugin implements IMixinConfigPlugin {
     public List<String> getMixins() { return null; }
     public void preApply(String name, ClassNode node, String mixin, IMixinInfo info) { }
     public void postApply(String name, ClassNode node, String mixin, IMixinInfo info) {
-        IntegrationBootstrap.hooks = true; IntegrationBootstrap.reason = "ready";
+        ChatPatchesBootstrap.hooks = true; ChatPatchesBootstrap.reason = "ready";
     }
 }

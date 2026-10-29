@@ -30,7 +30,7 @@ Use disposable installations and worlds. Record exact mod/client/server versions
 | Chat Patches 8.0.0+26.3-fabric, enhanced path | Old player chat and all event types show server-capture time in configured timestamp, hover and context display; timezone follows Chat Patches. |
 | Chat Patches timestamp/system-time toggles, names and duplicate merging | User settings remain authoritative; event messages respect system-time settings; merging/names/logging still work. |
 | Chat Patches loading an existing chat log during replay | Queued records retain historical metadata when drained; subsequent live messages have their normal current time. |
-| Chat Patches integration disabled, then client restarted | Our Chat Patches mixin is not applied and internal metadata is not accessed; base features work. Existing Chat Patches behavior is unchanged. |
+| Message timestamp compatibility disabled, then client restarted | Our Chat Patches mixin is not applied and internal metadata is not accessed; base features work. Existing Chat Patches behavior is unchanged. |
 | Unsupported Chat Patches shape or runtime adapter failure | Base history continues; one warning and actionable status; no duplicate batch replay or stale metadata on live messages. |
 | Client changes integration setting without restart | Status distinguishes saved versus startup state; restart requirement is visible. |
 | Singleplayer, LAN host with cheats off, vanilla/enhanced LAN guests | Owner can administer; ordinary guests cannot; recipient preferences and histories remain isolated. |
@@ -46,3 +46,5 @@ Use disposable installations and worlds. Record exact mod/client/server versions
 | Save/reload skipping with existing speech queued | Future enhanced entries use the new value; no queue clearing or rereading old entries; system fallback is unaffected. |
 
 Before a performance decision, distinguish selection cost from decoding, packet encoding, real network queuing and client rendering. Background fixture benchmarks cover only the measured stages, not production TPS or end-to-end latency.
+
+Configuration and integration-manager regressions cover the message timestamp compatibility setting, saves/reloads, and nested scopes, failure reporting and connection resets with multiple simulated adapters. Chat Patches remains the only production adapter; these tests do not establish compatibility between multiple third-party mods.
