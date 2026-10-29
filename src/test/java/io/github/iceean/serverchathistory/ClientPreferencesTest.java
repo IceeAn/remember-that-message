@@ -13,11 +13,29 @@ class ClientPreferencesTest {
     @Test void defaultAndAllSettingsRoundTrip() {
         assertEquals(ClientConfig.DEFAULT, ClientConfig.read("{}"));
         var configured = ClientConfig.DEFAULT.with("historyLimit", "100").with("events.join", "false")
-                .with("chatPatchesIntegration", "false").with("receiveHistory", "false");
+                .with("chatPatchesIntegration", "false").with("receiveHistory", "false")
+                .with("skipHistoryNarration", "false");
         assertEquals(configured, ClientConfig.read(configured.write()));
         assertEquals(100, configured.preferences().historyLimit());
         assertFalse(configured.preferences().includes(MessageKind.JOIN));
         assertTrue(configured.preferences().includes(MessageKind.CHAT));
+        assertFalse(configured.skipHistoryNarration());
+        assertEquals("false", configured.get("skipHistoryNarration"));
+    }
+    @Test void existingClientFilesDefaultToSkippingNarrationWithoutChangingNegotiatedPreferences() {
+        var existing = ClientConfig.read("{\"historyLimit\":20,\"chatPatchesIntegration\":false}");
+        assertTrue(existing.skipHistoryNarration());
+        assertEquals(existing.preferences(), existing.with("skipHistoryNarration", "false").preferences());
+    }
+    @Test void narrationPreferenceUpdatesLocallyOnSaveAndReload() throws Exception {
+        var file = directory.resolve("client.json"); var store = new ClientConfigStore(file);
+        assertTrue(store.reload()); assertTrue(store.active().skipHistoryNarration());
+        store.save(store.active().with("skipHistoryNarration", "false"));
+        assertFalse(store.active().skipHistoryNarration());
+        Files.writeString(file, "{\"skipHistoryNarration\":true}");
+        assertTrue(store.reload()); assertTrue(store.active().skipHistoryNarration());
+        Files.writeString(file, "{\"skipHistoryNarration\":\"false\"}");
+        assertFalse(store.reload()); assertTrue(store.active().skipHistoryNarration());
     }
     @Test void invalidSettingsDoNotReplaceActiveOrOverwriteFile() throws Exception {
         var file = directory.resolve("client.json"); var store = new ClientConfigStore(file);
@@ -34,7 +52,8 @@ class ClientPreferencesTest {
     }
     @Test void rejectsFractionalOverflowAndWrongTypes() {
         for (String json : List.of("{\"historyLimit\":1.2}", "{\"historyLimit\":9223372036854775808}",
-                "{\"receiveHistory\":\"false\"}", "{\"events\":{\"private\":true}}", "{\"unknown\":true}"))
+                "{\"receiveHistory\":\"false\"}", "{\"events\":{\"private\":true}}", "{\"unknown\":true}",
+                "{\"skipHistoryNarration\":null}", "{\"skipHistoryNarration\":0}"))
             assertThrows(RuntimeException.class, () -> ClientConfig.read(json));
     }
     @Test void filtersBeforeLimitAndKeepsOriginalOrder() {

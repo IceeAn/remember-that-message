@@ -87,6 +87,7 @@ Use `/chathistoryclient` for the settings screen (also available through Mod Men
 /chathistoryclient config set events.join false
 /chathistoryclient config set receiveHistory false
 /chathistoryclient config set chatPatchesIntegration false
+/chathistoryclient config set skipHistoryNarration false
 /chathistoryclient reload
 ```
 
@@ -98,10 +99,15 @@ These are local commands requiring no server permission. `config/server_chat_his
 | `historyLimit` | `0` follows the server; a positive integer limits eligible records. |
 | `events.join`, `events.leave`, `events.death`, `events.advancement` | All `true`; filter history only, not live chat or server storage. |
 | `chatPatchesIntegration` | `true`; changes require a **client restart**. |
+| `skipHistoryNarration` | `true`; skips enhanced history entries in narration without enabling or disabling Minecraft's narrator. |
 
-Ordinary preference changes apply on the **next connection**. They do not remove, reinsert or rewrite existing chat or Chat Patches logs. The server filters by its own policy, recipient visibility and personal event preferences **before** selecting the latest N eligible records, then sends them oldest first. Preferences can only narrow retained server history.
+Receiving preference changes apply on the **next connection**. They do not remove, reinsert or rewrite existing chat or Chat Patches logs. The server filters by its own policy, recipient visibility and personal event preferences **before** selecting the latest N eligible records, then sends them oldest first. Preferences can only narrow retained server history.
 
 A supporting client negotiates during configuration, with a two-second timeout. Incompatible, incomplete or timed-out negotiation falls back to server-default history and displays a warning; personal preferences, including opt-out, may not apply in that case. Vanilla clients need no negotiation. Client `status` distinguishes saved preferences from those accepted for this connection.
+
+“Narrator skips history” applies to subsequently received enhanced entries after saving or reloading. When disabled, successfully inserted entries use vanilla system-chat narration, which still respects Minecraft's narrator setting. It does not enable the narrator, reread existing history or clear queued speech. Large histories can queue up and delay live-message narration, so skipping is enabled by default. Live chat, batch notices and system-message fallback retain vanilla behavior; fallback messages cannot reliably be identified as history. Find the setting on the Narrator tab of `/chathistoryclient`.
+
+Enhanced replay also honors client-side account/launcher restrictions on receiving player chat. When player chat is prohibited, player history is neither displayed nor narrated; events use system-message reception rules. Sender blocking and friends-only restrictions remain in effect.
 
 ## Historical time and Chat Patches
 

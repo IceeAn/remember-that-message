@@ -33,9 +33,9 @@
   "server_chat_history.client.setting.events.death": "Deaths",
   "server_chat_history.client.setting.events.advancement": "Advancements",
   "server_chat_history.client.limit_label": "Maximum received entries (0 = server limit)",
-  "server_chat_history.client.settings_hint": "Receiving settings apply on next join. Integration changes require a game restart.",
+  "server_chat_history.client.settings_hint": "Receiving: next join. Narrator skipping: immediate. Integration: restart required.",
   "server_chat_history.client.restart_hint": "Restart Minecraft to apply this switch. When disabled at startup, compatibility hooks are not loaded.",
-  "server_chat_history.client.saved": "Saved. Receiving settings apply on next join; integration requires restart.",
+  "server_chat_history.client.saved": "Saved. Receiving: next join. Narrator skipping: immediate. Integration: restart required.",
   "server_chat_history.client.invalid_limit": "Enter 0 or a positive whole number.",
   "server_chat_history.client.config_error": "Client configuration error: %s",
   "server_chat_history.client.connection": "Connection: %s",
@@ -59,5 +59,9 @@
   "server_chat_history.client.integration.invalid_config": "Disabled: invalid configuration",
   "server_chat_history.client.integration.incompatible": "Disabled: incompatible interface",
   "server_chat_history.client.integration.checking": "Not initialized",
-  "server_chat_history.client.integration.runtime_error": "Disabled for this connection after an error"
+  "server_chat_history.client.integration.runtime_error": "Disabled for this connection after an error",
+  "server_chat_history.client.narrator": "Narrator",
+  "server_chat_history.client.setting.skipHistoryNarration": "Narrator skips history",
+  "server_chat_history.client.narration_hint": "Applies to future enhanced history entries after saving. Turning this off still requires the Minecraft narrator. Does not clear queued speech or affect live chat, batch notices or system-message fallback.",
+  "server_chat_history.client.narration_status": "Narrator skips history: %s (local, immediate, enhanced entries only)"
 }

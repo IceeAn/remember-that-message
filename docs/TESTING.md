@@ -10,6 +10,8 @@ Version 0.2.0 adds format-2 round trips and rejection of older formats, server-c
 
 Client compatibility contract tests check required Chat Patches method/field shapes and queued timestamp metadata. They do not run Chat Patches rendering or apply the mixin in a game. Server/player fixtures do not create a running world or network connection. These tests cannot establish real event ordering, actual UI behavior, disconnection cleanup, Fabric injection or live compatibility.
 
+Client display regressions exercise real ChatAbilities restrictions and GameNarrator routing with a mocked speech backend, without game/audio constructors. They cover default narration skipping, local configuration reload, adapter restoration order, and no speech or retry after rejected/failed display.
+
 ## Manual acceptance — separate confirmation required
 
 Use disposable installations and worlds. Record exact mod/client/server versions, settings, screenshots where useful and observed outcomes. Passing compilation or automated tests does not complete this checklist. Do not use real saves or accept the EULA as part of automated checks.
@@ -38,5 +40,9 @@ Use disposable installations and worlds. Record exact mod/client/server versions
 | Event toggle, shrinking, invalid config/reload, clearing and restart | Active configuration, eviction, recovery and notices match the README; pre-clear data does not return. |
 | Stop with connected players | Final enabled leave events persist. |
 | Wrapped text and large batches | Native/Chat Patches window limits apply; no pagination or cross-tick replay is promised. |
+| Account/launcher prohibits player chat but allows system messages | Enhanced player history does not enter display, time integration or narration; system events remain available. |
+| Narrator skipping at its default/on, Minecraft narrator enabled | Enhanced history entries are not submitted for speech; live chat and batch notices retain vanilla behavior. |
+| Skipping off, Minecraft narrator off/on | No speech when off; when on, successfully inserted entries use vanilla system-chat narration once while retaining time integration. |
+| Save/reload skipping with existing speech queued | Future enhanced entries use the new value; no queue clearing or rereading old entries; system fallback is unaffected. |
 
 Before a performance decision, distinguish selection cost from decoding, packet encoding, real network queuing and client rendering. Background fixture benchmarks cover only the measured stages, not production TPS or end-to-end latency.

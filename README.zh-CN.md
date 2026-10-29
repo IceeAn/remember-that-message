@@ -87,6 +87,7 @@
 /chathistoryclient config set events.join false
 /chathistoryclient config set receiveHistory false
 /chathistoryclient config set chatPatchesIntegration false
+/chathistoryclient config set skipHistoryNarration false
 /chathistoryclient reload
 ```
 
@@ -98,10 +99,15 @@
 | `historyLimit` | `0` 跟随服务端；正整数限制符合条件的条数。 |
 | `events.join`、`events.leave`、`events.death`、`events.advancement` | 全部 `true`；仅筛选历史，不过滤实时聊天或更改服务端存储。 |
 | `chatPatchesIntegration` | `true`；更改需要**重启客户端**。 |
+| `skipHistoryNarration` | `true`；“旁白跳过历史”，跳过增强历史正文，不开启或关闭 Minecraft 自带旁白。 |
 
-普通偏好**下次连接生效**，不删除、重新插入或改写现有聊天及 Chat Patches 日志。服务端先按自己的策略、接收者可见性及个人事件偏好筛选，再取最近 N 条符合条件的记录，从旧到新发送。个人偏好只能缩小服务端已保留的范围。
+接收偏好**下次连接生效**，不删除、重新插入或改写现有聊天及 Chat Patches 日志。服务端先按自己的策略、接收者可见性及个人事件偏好筛选，再取最近 N 条符合条件的记录，从旧到新发送。个人偏好只能缩小服务端已保留的范围。
 
 支持的客户端在配置阶段协商，最多等待两秒。版本不兼容、通道缺失或超时会回退服务端默认历史并显示警告，此时个人偏好（包括关闭接收）可能不生效。原版客户端无需协商。客户端 `status` 区分已保存偏好和当前连接实际采用的偏好。
+
+“旁白跳过历史”保存或重载后作用于后续收到的增强历史正文。关闭跳过时，成功插入的正文交给原版系统聊天旁白，仍遵守 Minecraft 的旁白开关；不会自动开启旁白、补读已显示历史或清除已经排队的语音。大量历史可能排队并延迟新消息播报，因此默认跳过。实时聊天、起止提示和系统消息回退仍按原版处理，后者无法可靠区分历史。设置页位于 `/chathistoryclient` 的“旁白”标签。
+
+增强回放在客户端额外遵守账号/启动器的玩家聊天接收限制：禁止玩家聊天时不显示或朗读玩家历史；事件按系统消息接收能力处理，发送者屏蔽与仅好友限制继续生效。
 
 ## 历史时间与 Chat Patches
 

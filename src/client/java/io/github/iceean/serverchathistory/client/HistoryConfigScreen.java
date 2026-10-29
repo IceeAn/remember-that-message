@@ -17,11 +17,11 @@ public final class HistoryConfigScreen extends Screen {
     @Override protected void init() {
         int w = Math.min(300, width - 24), x = (width - w) / 2;
         addRenderableWidget(new MultiLineTextWidget(width / 2 - w / 2, 10, title, font).setMaxWidth(w).setCentered(true));
-        String[] tabs = { "general", "events", "status" };
+        String[] tabs = { "general", "events", "narrator", "status" };
         for (int i = 0; i < tabs.length; i++) {
             int target = i;
             addRenderableWidget(Button.builder(text(tabs[i]), button -> { if (rememberLimit()) page = target; rebuildWidgets(); })
-                    .bounds(x + i * (w / 3), 28, w / 3 - 2, 20).build());
+                    .bounds(x + i * (w / tabs.length), 28, w / tabs.length - 2, 20).build());
         }
         limit = null;
         if (page == 0) {
@@ -33,12 +33,15 @@ public final class HistoryConfigScreen extends Screen {
         } else if (page == 1) {
             String[] keys = { "events.join", "events.leave", "events.death", "events.advancement" };
             for (int i = 0; i < keys.length; i++) toggle(keys[i], x, 56 + i * 24, w);
+        } else if (page == 2) {
+            toggle("skipHistoryNarration", x, 58, w);
+            addRenderableWidget(new MultiLineTextWidget(x, 84, text("narration_hint"), font).setMaxWidth(w).setMaxRows(7));
         } else {
             var message = Component.empty();
             for (var line : HistoryClient.statusLines()) message.append(line).append("\n");
             addRenderableWidget(new MultiLineTextWidget(x, 56, message, font).setMaxWidth(w).setMaxRows(Math.max(3, (height - 116) / 9)));
         }
-        if (page != 2) addRenderableWidget(new MultiLineTextWidget(x, 160, feedback, font).setMaxWidth(w).setMaxRows(3));
+        if (page != 3) addRenderableWidget(new MultiLineTextWidget(x, 160, feedback, font).setMaxWidth(w).setMaxRows(3));
         int bottom = height - 26;
         addRenderableWidget(Button.builder(text("save"), button -> save()).bounds(x, bottom, w / 2 - 2, 20).build());
         addRenderableWidget(Button.builder(text("cancel"), button -> onClose()).bounds(x + w / 2, bottom, w / 2, 20).build());

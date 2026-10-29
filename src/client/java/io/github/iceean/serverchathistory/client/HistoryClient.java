@@ -52,9 +52,12 @@ public final class HistoryClient implements ClientModInitializer {
             }
             remaining--; lastSequence = payload.sequence();
             var client = context.client(); var player = context.player();
-            if (!player.chatAbilities().canReceiveSystemMessages()) return;
-            if (payload.senderId() != null && (client.isBlocked(payload.senderId()) || client.isFriendOnlyRestricted(payload.senderId()))) return;
-            ADAPTER.display(payload, () -> client.gui.hud.getChat().addServerSystemMessage(payload.content()));
+            boolean senderRestricted = payload.senderId() != null
+                    && (client.isBlocked(payload.senderId()) || client.isFriendOnlyRestricted(payload.senderId()));
+            HistoryMessageDisplay.display(payload, player.chatAbilities(), senderRestricted, CONFIG.active().skipHistoryNarration(),
+                    insert -> ADAPTER.display(payload, insert),
+                    content -> client.gui.hud.getChat().addServerSystemMessage(content),
+                    content -> client.getNarrator().saySystemChatQueued(content));
         });
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> reset());
         ClientConfigurationConnectionEvents.DISCONNECT.register((listener, client) -> reset());
@@ -77,6 +80,7 @@ public final class HistoryClient implements ClientModInitializer {
         lines.add(text("connection", text(current == null ? "unknown" : "reason." + current.reason())));
         var saved = CONFIG.active();
         lines.add(text("saved_preferences", saved.preferences().receiveHistory(), limit(saved.preferences().historyLimit()), events(saved.preferences())));
+        lines.add(text("narration_status", text(saved.skipHistoryNarration() ? "on" : "off")));
         if (current != null) lines.add(text("active_preferences", current.preferences().receiveHistory(), limit(current.preferences().historyLimit()), events(current.preferences())));
         lines.add(text("integration_status", ADAPTER.version(), text("integration." + ADAPTER.state())));
         lines.add(text("integration_switch", saved.chatPatchesIntegration(), IntegrationBootstrap.ENABLED));
