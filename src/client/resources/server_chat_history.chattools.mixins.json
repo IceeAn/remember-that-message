@@ -1,0 +1,8 @@
+{
+  "required": false,
+  "package": "io.github.iceean.serverchathistory.client.mixin",
+  "plugin": "io.github.iceean.serverchathistory.client.compat.ChatToolsMixinPlugin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["ChatToolsTimestampMixin", "ChatToolsMessageTimeMixin", "ChatPatchesToolsQueueMixin"],
+  "injectors": {"defaultRequire": 1}
+}

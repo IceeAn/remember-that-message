@@ -12,7 +12,7 @@ public final class HistoryTimeIntegrations {
         this.adapters = List.copyOf(adapters);
     }
     public static HistoryTimeIntegrations createDefault() {
-        return new HistoryTimeIntegrations(List.of(new ChatPatchesAdapter()));
+        return new HistoryTimeIntegrations(List.of(new ChatPatchesAdapter(), ChatToolsAdapter.INSTANCE));
     }
     public List<HistoryTimeAdapter> adapters() { return adapters; }
     public void onFailure(BiConsumer<HistoryTimeAdapter, String> callback) {

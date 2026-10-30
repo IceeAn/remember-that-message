@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.extensibility.*;
 
 /** Validates optional interfaces without linking or initializing third-party classes. */
 public final class ChatHeadsMixinPlugin implements IMixinConfigPlugin {
-    static final String QUEUE_DESC = "(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/multiplayer/chat/GuiMessageSource;Lnet/minecraft/client/multiplayer/chat/GuiMessageTag;)Z";
-    static final String INSERT_DESC = QUEUE_DESC.substring(0, QUEUE_DESC.length() - 1) + "V";
+    static final String QUEUE_DESC = ChatPatchesQueueShape.QUEUE_DESC;
+    static final String INSERT_DESC = ChatPatchesQueueShape.INSERT_DESC;
     private boolean candidate;
     public void onLoad(String mixinPackage) {
         if (!ChatHeadsBootstrap.ENABLED) return;
@@ -35,15 +35,7 @@ public final class ChatHeadsMixinPlugin implements IMixinConfigPlugin {
                 && field(heads, "refreshingLineData", headType, true)
                 && field(heads, "refreshing", "Z", true) && field(heads, "serverSentUuid", "Z", true);
     }
-    static boolean queueCompatible(ClassNode log) {
-        if (!method(log, "queueMessage", QUEUE_DESC, true) || !method(log, "drainPendingMessages", "()V", false)) return false;
-        int calls = 0;
-        for (var m : log.methods) if (m.name.equals("drainPendingMessages"))
-            for (var insn : m.instructions) if (insn instanceof MethodInsnNode call
-                    && call.owner.equals("net/minecraft/client/gui/components/ChatComponent")
-                    && call.name.equals("addMessage") && call.desc.equals(INSERT_DESC)) calls++;
-        return calls == 1;
-    }
+    static boolean queueCompatible(ClassNode log) { return ChatPatchesQueueShape.compatible(log); }
     private static boolean method(ClassNode node, String name, String desc, boolean requirePublic) {
         int mask = Opcodes.ACC_STATIC | Opcodes.ACC_ABSTRACT | Opcodes.ACC_NATIVE | (requirePublic ? Opcodes.ACC_PUBLIC : 0);
         int expected = Opcodes.ACC_STATIC | (requirePublic ? Opcodes.ACC_PUBLIC : 0);

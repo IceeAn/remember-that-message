@@ -2,7 +2,7 @@
 
 [简体中文](README.zh-CN.md)
 
-A Fabric mod for **Minecraft Java 26.3** that replays a world's recent public chat when a player joins. Install it on the server; **vanilla clients do not need this mod or Fabric**. The same JAR optionally adds client preferences, a settings screen, and Chat Patches historical timestamps. It also supports the logical server in singleplayer and LAN worlds.
+A Fabric mod for **Minecraft Java 26.3** that replays a world's recent public chat when a player joins. Install it on the server; **vanilla clients do not need this mod or Fabric**. The same JAR optionally adds client preferences, a settings screen, and historical timestamps through Chat Patches or Chat Tools. It also supports the logical server in singleplayer and LAN worlds.
 
 Version 0.2.0 targets Java 25, Fabric Loader 0.20.1, and Fabric API 0.165.0+26.3. The project name is provisional; the mod ID is `server_chat_history`.
 
@@ -76,7 +76,7 @@ Player notices use Simplified Chinese only for `zh_cn`, otherwise English. Conso
 
 ## Optional client installation
 
-Install the same JAR and Fabric API in a Fabric 26.3 client. Chat Patches and Mod Menu are **optional**, not bundled. Without Chat Patches, all client preferences work; this mod adds no timestamp prefix or separate history panel.
+Install the same JAR and Fabric API in a Fabric 26.3 client. Chat Patches, Chat Tools, Chat Heads and Mod Menu are **optional**, not bundled. Without a supported timestamp mod, all client preferences work; this mod adds no timestamp prefix or separate history panel.
 
 Use `/chathistoryclient` for the settings screen (also available through Mod Menu), or:
 
@@ -99,7 +99,7 @@ These are local commands requiring no server permission. `config/server_chat_his
 | `receiveHistory` | `true`; disabling suppresses history and its start/end, empty and configuration-error notices after successful negotiation. |
 | `historyLimit` | `0` follows the server; a positive integer limits eligible records. |
 | `events.join`, `events.leave`, `events.death`, `events.advancement` | All `true`; filter history only, not live chat or server storage. |
-| `messageTimeIntegration` | `true`; enables supported historical-time integrations (currently Chat Patches only). Changes require a **client restart**. |
+| `messageTimeIntegration` | `true`; enables supported historical-time integrations (Chat Patches and Chat Tools). Changes require a **client restart**. |
 | `chatHeadsIntegration` | `true`; lets Chat Heads process player history using available player information. Independent of time integration; requires a **client restart**. |
 | `skipHistoryNarration` | `true`; skips enhanced history entries in narration without enabling or disabling Minecraft's narrator. |
 
@@ -111,7 +111,7 @@ A supporting client negotiates during configuration, with a two-second timeout. 
 
 Enhanced replay also honors client-side account/launcher restrictions on receiving player chat. When player chat is prohibited, player history is neither displayed nor narrated; events use system-message reception rules. Sender blocking and friends-only restrictions remain in effect.
 
-## Historical time and Chat Patches
+## Historical time compatibility
 
 All event times are **server capture times**, not client-declared send times. The enhanced protocol carries them independently of signed player-chat validation. It neither changes secure-profile policy nor requires `enforce-secure-profile=false`. Historical messages are not authenticated player signatures, and no temporary player identities or chat sessions are sent.
 
@@ -119,7 +119,15 @@ With both sides installed, server `auto`, and compatible Chat Patches integratio
 
 The target is **Chat Patches 8.0.0+26.3-fabric**. Other versions are attempted only if the required interface/bytecode checks pass. Passing those checks is **not a completed live compatibility test**; client status marks the integration as unverified in game. An incompatibility or runtime failure disables the adapter, reports the reason and warns once per connection while basic history remains available. Already displayed batches are not resent.
 
-After setting `messageTimeIntegration=false` and restarting, this mod applies **no Chat Patches time Mixin and accesses no Chat Patches time metadata**. Chat Patches itself still processes ordinary chat according to its own settings. The switch does not disable this mod's independent networking or preferences.
+After setting `messageTimeIntegration=false` and restarting, this mod applies **no Chat Patches or Chat Tools time Mixins and supplies no historical time metadata to either mod**. Those mods still process ordinary chat according to their own settings. The switch does not disable this mod's independent networking or preferences.
+
+### Chat Tools
+
+The additional target is **Chat Tools 2.4.5 for Fabric 26.3**, controlled by the same `messageTimeIntegration` setting. On the enhanced path, player chat and events use server-capture time for its timestamp prefix, hover date/time and message time metadata used by copying. Chat Tools retains its timestamp toggle, format and local timezone behavior; this mod does not add a second prefix itself or change its other HUD features. System fallback cannot supply historical time through this adapter.
+
+An optional Chat Patches queue hook carries this time through delayed insertion, independently of the Chat Heads toggle. If both timestamp mods enable their prefixes, both may appear; choose the desired display in their own settings. `/chathistoryclient status` reports each adapter separately. Missing or incompatible Chat Tools leaves basic history available. After disabling time compatibility and restarting, its time and time-queue hooks are not applied; the independent head queue hook may remain enabled.
+
+Automated tests and headless checks with the official JAR verify time scopes, actual timestamp transformations, and class loading with Chat Patches/Chat Heads. In-game rendering, copy menus, duplicate merging and live compatibility still require the acceptance checks.
 
 ## Chat Heads compatibility
 
@@ -131,7 +139,7 @@ The implementation uses available player information only. Supporting full offli
 
 Vanilla retains at most 100 chat messages and 100 rendered lines. Wrapping and batch notices consume that budget; a larger server limit does not enlarge it. Replay remains within the join tick, without pagination or interleaved tick batches.
 
-**Validation status:** automated checks do not prove actual Fabric injection or game compatibility. See [docs/TESTING.md](docs/TESTING.md) for the separate vanilla, optional-client, dedicated-server, singleplayer/LAN and Chat Patches acceptance checks.
+**Validation status:** unit tests do not prove actual Fabric injection; headless transformation checks do not prove game compatibility. See [docs/TESTING.md](docs/TESTING.md) for the separate vanilla, optional-client, dedicated-server, singleplayer/LAN, Chat Patches and Chat Tools acceptance checks.
 
 ## Persistence
 

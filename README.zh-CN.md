@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-适用于 **Minecraft Java 26.3** 的 Fabric 模组。玩家进入游戏时，补发当前世界最近的公开聊天记录。**服务端安装即可，原版客户端不需要安装本模组或 Fabric**。同一个 JAR 可选安装到客户端，提供个人偏好、设置界面及 Chat Patches 历史时间联动。也支持单人世界及开放局域网的逻辑服务端。
+适用于 **Minecraft Java 26.3** 的 Fabric 模组。玩家进入游戏时，补发当前世界最近的公开聊天记录。**服务端安装即可，原版客户端不需要安装本模组或 Fabric**。同一个 JAR 可选安装到客户端，提供个人偏好、设置界面及 Chat Patches、Chat Tools 历史时间联动。也支持单人世界及开放局域网的逻辑服务端。
 
 0.2.0 使用 Java 25、Fabric Loader 0.20.1、Fabric API 0.165.0+26.3。项目名称暂定，模组 ID 为 `server_chat_history`。
 
@@ -76,7 +76,7 @@
 
 ## 可选客户端安装
 
-在 Fabric 26.3 客户端安装同一个 JAR 和 Fabric API。Chat Patches、Mod Menu 均为**可选依赖**，不会打包进本模组。未安装 Chat Patches 时个人偏好仍可用，不额外添加时间前缀或独立历史页面。
+在 Fabric 26.3 客户端安装同一个 JAR 和 Fabric API。Chat Patches、Chat Tools、Chat Heads、Mod Menu 均为**可选依赖**，不会打包进本模组。未安装已支持的时间显示模组时个人偏好仍可用，不额外添加时间前缀或独立历史页面。
 
 使用 `/chathistoryclient` 打开设置界面，也可从 Mod Menu 进入；可用命令：
 
@@ -99,7 +99,7 @@
 | `receiveHistory` | `true`；关闭后，在协商成功时不接收历史及开始、结束、空历史、配置错误提示。 |
 | `historyLimit` | `0` 跟随服务端；正整数限制符合条件的条数。 |
 | `events.join`、`events.leave`、`events.death`、`events.advancement` | 全部 `true`；仅筛选历史，不过滤实时聊天或更改服务端存储。 |
-| `messageTimeIntegration` | `true`；启用已支持的消息时间显示兼容（目前仅 Chat Patches），更改需要**重启客户端**。 |
+| `messageTimeIntegration` | `true`；启用已支持的消息时间显示兼容（Chat Patches、Chat Tools），更改需要**重启客户端**。 |
 | `chatHeadsIntegration` | `true`；让 Chat Heads 使用现有玩家资料处理玩家历史头像，独立于时间兼容；更改需要**重启客户端**。 |
 | `skipHistoryNarration` | `true`；“旁白跳过历史”，跳过增强历史正文，不开启或关闭 Minecraft 自带旁白。 |
 
@@ -111,7 +111,7 @@
 
 增强回放在客户端额外遵守账号/启动器的玩家聊天接收限制：禁止玩家聊天时不显示或朗读玩家历史；事件按系统消息接收能力处理，发送者屏蔽与仅好友限制继续生效。
 
-## 历史时间与 Chat Patches
+## 历史时间兼容
 
 所有记录统一使用**服务端捕获时间**，不采用客户端声明的发送时间。增强协议独立传递时间，不经过签名玩家聊天验证，不改变安全配置，也无需设置 `enforce-secure-profile=false`。历史不是经过验证的玩家签名消息，不再发送临时玩家身份或聊天会话。
 
@@ -119,7 +119,15 @@
 
 目标为 **Chat Patches 8.0.0+26.3-fabric**。其他版本通过必要接口与字节码检查后可尝试适配；检查通过**不代表已完成实际游戏兼容性验证**，客户端状态会标明尚未实测。不兼容或运行异常会停用适配、保留原因并在本次连接提示一次，基础历史功能仍可用，不重新补发已经显示的整批记录。
 
-设置 `messageTimeIntegration=false` 并重启后，本模组**不应用 Chat Patches 时间 Mixin，也不访问其时间元数据**。Chat Patches 自身仍按自己的设置处理普通聊天；该开关不关闭本模组独立的网络协议和个人偏好。
+设置 `messageTimeIntegration=false` 并重启后，本模组**不应用 Chat Patches、Chat Tools 时间 Mixin，也不向它们提供历史时间元数据**。这些模组仍按自己的设置处理普通聊天；该开关不关闭本模组独立的网络协议和个人偏好。
+
+### Chat Tools
+
+新增目标为 **Chat Tools 2.4.5（Fabric 26.3）**，沿用 `messageTimeIntegration` 开关。增强路径中，玩家聊天和事件的时间前缀、悬浮日期/时间以及复制功能所用的消息时间元数据使用服务端捕获时间。时间开关、格式及本地时区仍遵从 Chat Tools；本模组不会自行再加一层前缀，也不改变它的其他 HUD 功能。系统回退路径无法通过此适配提供历史时间。
+
+同装 Chat Patches 时，可选队列钩子会将历史时间保留到延迟插入时，独立于头像开关。两个时间模组均开启前缀时可能同时显示，请在它们各自设置中选择所需显示方式。`/chathistoryclient status` 分别报告适配状态；Chat Tools 缺失或不兼容时基础历史仍可用。关闭时间兼容并重启后，不应用它的时间及时间队列钩子；独立的头像队列钩子仍可能启用。
+
+自动测试及正式 JAR 无窗口检查已验证时间作用域、实际时间方法变换，以及与 Chat Patches、Chat Heads 同装的类加载。游戏内渲染、复制菜单、重复合并及真实联机兼容性仍须另行验收。
 
 ## Chat Heads 头像兼容
 
@@ -131,7 +139,7 @@
 
 原版最多保留 100 条消息及 100 行渲染文本，换行和批次提示也占用额度；扩大服务端容量不会扩大客户端聊天窗口。回放仍在入服 tick 内完成，不分页，也不跨 tick 分批。
 
-**验证状态：**自动化检查不能证明实际 Fabric 注入或游戏兼容性。原版、可选客户端、独立服、单人/LAN 和 Chat Patches 另见 [验收清单](docs/TESTING.zh-CN.md)。
+**验证状态：**单元测试不能证明实际 Fabric 注入；无窗口变换检查不能证明游戏兼容性。原版、可选客户端、独立服、单人/LAN、Chat Patches 和 Chat Tools 另见 [验收清单](docs/TESTING.zh-CN.md)。
 
 ## 存储
 
