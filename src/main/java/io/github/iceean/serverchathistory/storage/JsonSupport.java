@@ -5,6 +5,7 @@ import java.time.Instant;
 
 public final class JsonSupport {
     private JsonSupport() { }
+    public static <T> T read(String json, Class<T> type) { return GSON.fromJson(json, type); }
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping()
             .setStrictness(Strictness.STRICT)
             .registerTypeAdapter(Instant.class, (JsonSerializer<Instant>) (value, type, context) -> new JsonPrimitive(value.toString()))

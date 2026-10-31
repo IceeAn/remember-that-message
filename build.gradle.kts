@@ -1,5 +1,6 @@
 plugins {
     id("net.fabricmc.fabric-loom") version "1.17.21"
+    id("net.fabricmc.fabric-loom-remap") version "1.17.21" apply false
 }
 
 version = providers.gradleProperty("mod_version").get()
@@ -63,3 +64,6 @@ tasks.test {
 tasks.jar {
     from("LICENSE") { rename { "LICENSE_server_chat_history" } }
 }
+
+base { archivesName.set("server-chat-history") }
+tasks.withType<AbstractArchiveTask>().configureEach { archiveVersion.set("${project.version}+mc26.3") }

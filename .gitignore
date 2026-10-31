@@ -4,6 +4,9 @@
 /build/
 /run/
 /out/
+/versions/**/build/
+/versions/**/.gradle/
+/versions/**/run/
 /.idea/
 *.iml
 .DS_Store

@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "io.github.iceean.serverchathistory.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "CommonListenerAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "ClientCommandClickMixin"
+  ]
+}

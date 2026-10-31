@@ -4,13 +4,21 @@
 
 ## Automated checks
 
-Run `./gradlew clean build` using Java 25. JUnit Jupiter checks history retention/order, configuration recovery, permissions, localization, JSON/backup recovery, world isolation, asynchronous clear/save races, final flush, filtering and recipient chat visibility. Snapshot/cache tests cover changed versus unchanged ticks, shrinking, dirty clearing, shutdown records and lazy decoding.
+Run `./gradlew clean build` using Java 25 with a Java 21 toolchain installed; this builds/tests both targets. JUnit Jupiter checks history retention/order, configuration recovery, permissions, localization, JSON/backup recovery, world isolation, asynchronous clear/save races, final flush, filtering and recipient chat visibility. Snapshot/cache tests cover changed versus unchanged ticks, shrinking, dirty clearing, shutdown records and lazy decoding.
 
 Version 0.2.0 adds format-2 round trips and rejection of older formats, server-capture timestamps, filtered rich components, client configuration validation, filtering before personal limits, opt-out selection, negotiation timeout/version mismatch, missing-channel fallback and forced-system preference retention. Protocol tests exercise the real Minecraft component codec and the custom history payload codec without player-chat signature validation.
 
 Client compatibility contract tests check required Chat Patches method/field shapes and queued timestamp metadata. They do not run Chat Patches rendering or apply the mixin in a game. Server/player fixtures do not create a running world or network connection. These tests cannot establish real event ordering, actual UI behavior, disconnection cleanup, Fabric injection or live compatibility.
 
-Client display regressions exercise real ChatAbilities restrictions and GameNarrator routing with a mocked speech backend, without game/audio constructors. They cover default narration skipping, local configuration reload, adapter restoration order, and no speech or retry after rejected/failed display.
+Client display regressions exercise real ChatAbilities (26.3) or ChatStatus (1.21.1) restrictions and GameNarrator routing with a mocked speech backend, without game/audio constructors. They cover default narration skipping, local configuration reload, adapter restoration order, and no speech or retry after rejected/failed display.
+
+## Version-specific checks
+
+The 1.21.1 module shares the business regression suite and adds checks for strict parsing with its older Gson, intermediary bytecode contracts, attended client-command clicks, native account restrictions and system narration. Configuration-task tests cover waiting before start, reply/timeout completion exactly once on the owning server, disconnect and shutdown cancellation. The 26.3 tests run separately on Java 25; 1.21.1 tests run on Java 21.
+
+Headless checks of the **remapped release JAR** use official Chat Patches 8.0.0+1.21.1-fabric, Chat Tools 2.4.5+1.21.1 and Chat Heads 0.15.7-fabric-1.21. The matrix covers each mod alone, every pair, all three, no integrations, independent time/head switches, invalid configuration and the dedicated-server environment. It checks actual Mixin application, historical timestamp transformations, sender metadata and isolation from subsequent live messages. Registry bootstrap and fake client objects do not open a window or start a world, game connection or mod entrypoint.
+
+Repeat the manual matrix below for **both targets**, using the matching versions listed in the README. In 1.21.1 also verify that clicking a `RUN_COMMAND` text cannot change local settings, while typed commands and explicitly submitted suggestions work. Check local-world chat restrictions against native 1.21.1 behavior; only ALL/SYSTEM narration modes read system history when skipping is disabled. Cross-version proxies and history migration are outside this stage.
 
 ## Manual acceptance — separate confirmation required
 
@@ -18,7 +26,7 @@ Use disposable installations and worlds. Record exact mod/client/server versions
 
 | Scenario | Expected result |
 | --- | --- |
-| Fabric 26.3 dedicated server, vanilla 26.3 client | Connects without client mods; eligible history uses system chat; next live chat works. No extra negotiation delay. |
+| Fabric dedicated server, matching vanilla client (26.3 and 1.21.1) | Connects without client mods; eligible history uses system chat; next live chat works. No extra negotiation delay. |
 | Both sides installed; client without Chat Patches, Chat Tools or Mod Menu | History, local commands, settings and status work independently. No standalone timestamp prefix. |
 | Online mode with secure profiles on/off; offline mode | History works without changing policy or sending temporary player identities/sessions. |
 | `auto` versus `system` | `auto` enhances compatible connections; `system` uses vanilla messages but retains accepted personal preferences. |
@@ -27,7 +35,7 @@ Use disposable installations and worlds. Record exact mod/client/server versions
 | Config-stage timeout, unsupported protocol or missing play channel | Join continues using server defaults with a warning. Accepted/current state is shown accurately; late replies cannot change it. |
 | Disconnect/reconnect and server change | Negotiation and one-per-connection failure notices reset; global saved preferences remain. |
 | Client screen, commands and optional Mod Menu | Saving/reloading works without server permissions; saved versus current values are clear; ordinary preferences apply next connection. |
-| Chat Patches 8.0.0+26.3-fabric, enhanced path | Old player chat and all event types show server-capture time in configured timestamp, hover and context display; timezone follows Chat Patches. |
+| Chat Patches 8.0.0 for each target, enhanced path | Old player chat and all event types show server-capture time in configured timestamp, hover and context display; timezone follows Chat Patches. |
 | Chat Patches timestamp/system-time toggles, names and duplicate merging | User settings remain authoritative; event messages respect system-time settings; merging/names/logging still work. |
 | Chat Patches loading an existing chat log during replay | Queued records retain historical metadata when drained; subsequent live messages have their normal current time. |
 | Message timestamp compatibility disabled, then client restarted | Our Chat Patches and Chat Tools time mixins are not applied and historical time metadata is not supplied; base features work. Existing Chat Patches behavior is unchanged. |
@@ -55,7 +63,7 @@ The automated adapter tests cover exact UUID lookup, missing-player delegation, 
 
 | Scenario | Expected result |
 | --- | --- |
-| Chat Heads 1.3.2 alone; online sender | Enhanced player history uses the sender's head according to Chat Heads settings. |
+| Chat Heads 1.3.2 (26.3) / 0.15.7 (1.21.1) alone; online sender | Enhanced player history uses the sender's head according to Chat Heads settings. |
 | Chat Heads plus Chat Patches 8.0.0 | Heads and historical times both work; no duplicate head with name formatting or duplicate merging. |
 | Before-name / before-line placement; wrapped text and refresh | Placement and associated sender survive wrapping and rebuilding the HUD. |
 | Chat Patches loading old logs; two senders with identical text | Queued history retains each sender's head and timestamp; no stale head reaches live chat or events. |
@@ -72,7 +80,7 @@ Regressions cover every record type, timezones/DST, scope restoration, equal-tex
 | --- | --- |
 | Chat Tools 2.4.5, player chat and all events | Prefix, hover date/offset and copy time use server-capture time; later live chat uses normal time. |
 | Timestamp disabled, custom format, dates across DST | Respect Chat Tools settings and the local offset at the historical instant; no forced prefix. |
-| With Chat Patches 8.0.0 and Chat Heads 1.3.2 | Historical times and existing head support work; extra prefixes can be disabled in upstream settings. |
+| With matching Chat Patches 8.0.0 and Chat Heads 1.3.2 / 0.15.7 | Historical times and existing head support work; extra prefixes can be disabled in upstream settings. |
 | Join while Chat Patches loads logs; head integration disabled | Drained entries retain individual times, including identical text; disconnect clears pending metadata. |
 | Time integration disabled and restarted, absent or unsupported mod | Corresponding time hooks stay inactive, basic history works, status explains why; head toggle remains independent. |
 | Chat Tools duplicate merging, copy menu and history refresh | Follow upstream display/copy rules without repeated timestamp decoration; check merged time semantics and metadata. |

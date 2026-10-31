@@ -28,7 +28,7 @@ public final class JsonHistoryStore implements HistoryStore {
     private HistorySnapshot read(Path path) {
         if (!Files.exists(path)) return null;
         try {
-            HistorySnapshot result = JsonSupport.GSON.fromJson(Files.readString(path), HistorySnapshot.class);
+            HistorySnapshot result = JsonSupport.read(Files.readString(path), HistorySnapshot.class);
             if (result == null) throw new IOException("Null history snapshot: " + path);
             validator.accept(result);
             return result;

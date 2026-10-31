@@ -1,0 +1,17 @@
+package io.github.iceean.serverchathistory.client.mixin;
+
+import io.github.iceean.serverchathistory.client.compat.HistoricalDate;
+
+import java.util.Date;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+
+@Mixin(targets = "obro1961.chatpatches.config.Config", remap = false)
+public abstract class ChatPatchesTimeMixin {
+    @ModifyVariable(method = "makeTimestamp",
+            at = @At("HEAD"), argsOnly = true, ordinal = 0, remap = false)
+    private boolean serverChatHistory$eventType(boolean original, Date when, boolean system, boolean boundary) {
+        return when instanceof HistoricalDate historical ? historical.system() : original;
+    }
+}

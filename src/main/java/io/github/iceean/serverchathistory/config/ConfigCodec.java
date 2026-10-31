@@ -12,7 +12,7 @@ public final class ConfigCodec {
     private ConfigCodec() { }
 
     public static ModConfig read(String source) {
-        JsonObject json = JsonSupport.GSON.fromJson(source, JsonObject.class);
+        JsonObject json = JsonSupport.read(source, JsonObject.class);
         if (json == null) throw new IllegalArgumentException("Configuration must be an object");
         checkKeys(json, Set.of("historyLimit", "events", "replayMode", "showEmptyHistory", "showConfigErrors"));
         JsonObject events = json.has("events") ? json.getAsJsonObject("events") : new JsonObject();

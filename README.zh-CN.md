@@ -2,17 +2,24 @@
 
 [English](README.md)
 
-适用于 **Minecraft Java 26.3** 的 Fabric 模组。玩家进入游戏时，补发当前世界最近的公开聊天记录。**服务端安装即可，原版客户端不需要安装本模组或 Fabric**。同一个 JAR 可选安装到客户端，提供个人偏好、设置界面及 Chat Patches、Chat Tools 历史时间联动。也支持单人世界及开放局域网的逻辑服务端。
+适用于 **Minecraft Java 26.3 和 1.21.1** 的 Fabric 模组。玩家进入游戏时，补发当前世界最近的公开聊天记录。**服务端安装即可，原版客户端不需要安装本模组或 Fabric**。同一个 JAR 可选安装到客户端，提供个人偏好、设置界面及 Chat Patches、Chat Tools 历史时间联动。也支持单人世界及开放局域网的逻辑服务端。
 
-0.2.0 使用 Java 25、Fabric Loader 0.20.1、Fabric API 0.165.0+26.3。项目名称暂定，模组 ID 为 `server_chat_history`。
+0.2.0 按 Minecraft 版本分别提供 JAR，使用 Fabric Loader 0.20.1。项目名称暂定，模组 ID 为 `server_chat_history`。
 
 ## 安装
 
-1. 使用 Java 25 和 Fabric Loader 0.20.1 创建 Fabric 26.3 服务端。
-2. 将 Fabric API 0.165.0+26.3 和 `server-chat-history-0.2.0.jar` 放入 `mods` 目录。
+1. 使用对应的 Java 版本和 Fabric Loader 0.20.1 创建 Fabric 服务端。
+2. 将下表中对应版本的 Fabric API 和模组 JAR 放入 `mods` 目录。
 3. 启动后自动生成 `config/server_chat_history.json`，历史文件保存在世界存档中。
 
-单人或局域网游戏由房主在自己的 Fabric 实例安装上述模组，访客可以使用原版 26.3。本模组不会修改正版验证、安全配置或服务端 EULA。
+| Minecraft | Java 运行版本 | Fabric API | 模组 JAR |
+| --- | --- | --- | --- |
+| 26.3 | 25 | 0.165.0+26.3 | `server-chat-history-0.2.0+mc26.3.jar` |
+| 1.21.1 | 21 | 0.116.17+1.21.1 | `server-chat-history-0.2.0+mc1.21.1.jar` |
+
+仅安装对应版本的 JAR。目前不支持代理跨版本增强回放，也未实现不同 Minecraft 版本之间的历史组件 JSON 迁移；切换版本前请保留备份。
+
+单人或局域网游戏由房主在自己的 Fabric 实例安装上述模组，访客可以使用相同 Minecraft 版本的原版客户端。本模组不会修改正版验证、安全配置或服务端 EULA。
 
 ## 记录与补发
 
@@ -76,7 +83,7 @@
 
 ## 可选客户端安装
 
-在 Fabric 26.3 客户端安装同一个 JAR 和 Fabric API。Chat Patches、Chat Tools、Chat Heads、Mod Menu 均为**可选依赖**，不会打包进本模组。未安装已支持的时间显示模组时个人偏好仍可用，不额外添加时间前缀或独立历史页面。
+在相同 Minecraft 版本的 Fabric 客户端安装对应 JAR 和 Fabric API。Chat Patches、Chat Tools、Chat Heads、Mod Menu 均为**可选依赖**，不会打包进本模组。未安装已支持的时间显示模组时个人偏好仍可用，不额外添加时间前缀或独立历史页面。
 
 使用 `/chathistoryclient` 打开设置界面，也可从 Mod Menu 进入；可用命令：
 
@@ -92,7 +99,7 @@
 /chathistoryclient reload
 ```
 
-这些是无需服务端权限的本地命令。`config/server_chat_history-client.json` 保存全局偏好，所有服务器共用：
+这些是无需服务端权限的本地命令。1.21.1 会阻止聊天文本通过 `RUN_COMMAND` 点击事件执行 `/chathistoryclient`；请手动输入，或使用需要自己确认提交的命令建议。`config/server_chat_history-client.json` 保存全局偏好，所有服务器共用：
 
 | 设置 | 默认及作用 |
 | --- | --- |
@@ -109,7 +116,7 @@
 
 “旁白跳过历史”保存或重载后作用于后续收到的增强历史正文。关闭跳过时，成功插入的正文交给原版系统聊天旁白，仍遵守 Minecraft 的旁白开关；不会自动开启旁白、补读已显示历史或清除已经排队的语音。大量历史可能排队并延迟新消息播报，因此默认跳过。实时聊天、起止提示和系统消息回退仍按原版处理，后者无法可靠区分历史。设置页位于 `/chathistoryclient` 的“旁白”标签。
 
-增强回放在客户端额外遵守账号/启动器的玩家聊天接收限制：禁止玩家聊天时不显示或朗读玩家历史；事件按系统消息接收能力处理，发送者屏蔽与仅好友限制继续生效。
+增强回放在客户端额外遵守账号/启动器的玩家聊天接收限制：禁止玩家聊天时不显示或朗读玩家历史；事件按系统消息接收能力处理，发送者屏蔽及 Minecraft 支持的仅好友限制继续生效。1.21.1 遵循其原版 `ChatStatus` 规则，包括本地世界例外。
 
 ## 历史时间兼容
 
@@ -117,13 +124,13 @@
 
 双方均安装本模组、服务端为 `auto` 且兼容联动已启用时，适配器向 Chat Patches 提供玩家聊天和事件的历史时间。时间格式、时区、悬浮/上下文显示、名称、重复合并及日志仍由 Chat Patches 的配置决定，也遵守其时间总开关和系统消息时间开关。服务端 `system`、原版客户端，或联动缺失/关闭/失败时，无法通过本适配器显示历史时间；Chat Patches 可能显示接收时间。
 
-目标为 **Chat Patches 8.0.0+26.3-fabric**。其他版本通过必要接口与字节码检查后可尝试适配；检查通过**不代表已完成实际游戏兼容性验证**，客户端状态会标明尚未实测。不兼容或运行异常会停用适配、保留原因并在本次连接提示一次，基础历史功能仍可用，不重新补发已经显示的整批记录。
+目标为 **对应 Minecraft 版本的 Chat Patches 8.0.0**。其他版本通过必要接口与字节码检查后可尝试适配；检查通过**不代表已完成实际游戏兼容性验证**，客户端状态会标明尚未实测。不兼容或运行异常会停用适配、保留原因并在本次连接提示一次，基础历史功能仍可用，不重新补发已经显示的整批记录。
 
 设置 `messageTimeIntegration=false` 并重启后，本模组**不应用 Chat Patches、Chat Tools 时间 Mixin，也不向它们提供历史时间元数据**。这些模组仍按自己的设置处理普通聊天；该开关不关闭本模组独立的网络协议和个人偏好。
 
 ### Chat Tools
 
-新增目标为 **Chat Tools 2.4.5（Fabric 26.3）**，沿用 `messageTimeIntegration` 开关。增强路径中，玩家聊天和事件的时间前缀、悬浮日期/时间以及复制功能所用的消息时间元数据使用服务端捕获时间。时间开关、格式及本地时区仍遵从 Chat Tools；本模组不会自行再加一层前缀，也不改变它的其他 HUD 功能。系统回退路径无法通过此适配提供历史时间。
+新增目标为 **Chat Tools 2.4.5（Fabric 26.3 或 1.21.1）**，沿用 `messageTimeIntegration` 开关。增强路径中，玩家聊天和事件的时间前缀、悬浮日期/时间以及复制功能所用的消息时间元数据使用服务端捕获时间。时间开关、格式及本地时区仍遵从 Chat Tools；本模组不会自行再加一层前缀，也不改变它的其他 HUD 功能。系统回退路径无法通过此适配提供历史时间。
 
 同装 Chat Patches 时，可选队列钩子会将历史时间保留到延迟插入时，独立于头像开关。两个时间模组均开启前缀时可能同时显示，请在它们各自设置中选择所需显示方式。`/chathistoryclient status` 分别报告适配状态；Chat Tools 缺失或不兼容时基础历史仍可用。关闭时间兼容并重启后，不应用它的时间及时间队列钩子；独立的头像队列钩子仍可能启用。
 
@@ -131,9 +138,9 @@
 
 ## Chat Heads 头像兼容
 
-设置界面的“兼容”页提供独立的时间与 Chat Heads 开关。针对 **Chat Heads 1.3.2（26.3）**，增强玩家历史通过发送者 UUID 查询当前连接的玩家资料，交给它原有的头像识别逻辑；检测、头像位置及渲染设置仍由 Chat Heads 决定。本适配不为事件主动添加玩家头像。查不到玩家资料时沿用 Chat Heads 自己的识别，不新增离线资料缓存、皮肤请求或虚假玩家列表条目，不保证离线头像或发言当时的皮肤。
+设置界面的“兼容”页提供独立的时间与 Chat Heads 开关。针对 **Chat Heads 1.3.2（26.3）或 0.15.7（1.21.1）**，增强玩家历史通过发送者 UUID 查询当前连接的玩家资料，交给它原有的头像识别逻辑；检测、头像位置及渲染设置仍由 Chat Heads 决定。本适配不为事件主动添加玩家头像。查不到玩家资料时沿用 Chat Heads 自己的识别，不新增离线资料缓存、皮肤请求或虚假玩家列表条目，不保证离线头像或发言当时的皮肤。
 
-同时安装 **Chat Patches 8.0.0+26.3-fabric** 时，可选队列钩子在其加载旧日志期间保留每条历史的头像元数据，出队时恢复，避免重复装饰。这个头像专用的 Chat Patches 钩子独立于 `messageTimeIntegration`，单独关闭时间兼容不会关闭它。设置 `chatHeadsIntegration=false` 并重启，才会关闭本模组的头像适配及队列钩子；Chat Heads 自身对普通消息的处理仍保留。缺失或不支持的适配不会禁用基础历史；状态显示具体原因，运行错误会停用本次连接的头像适配。
+同时安装 **对应 Minecraft 版本的 Chat Patches 8.0.0** 时，可选队列钩子在其加载旧日志期间保留每条历史的头像元数据，出队时恢复，避免重复装饰。这个头像专用的 Chat Patches 钩子独立于 `messageTimeIntegration`，单独关闭时间兼容不会关闭它。设置 `chatHeadsIntegration=false` 并重启，才会关闭本模组的头像适配及队列钩子；Chat Heads 自身对普通消息的处理仍保留。缺失或不支持的适配不会禁用基础历史；状态显示具体原因，运行错误会停用本次连接的头像适配。
 
 完整离线头像支持保留为后续事项。自动测试与无窗口类变换检查不能替代游戏内的头像位置、重复合并和旧日志加载验收。
 
@@ -157,7 +164,14 @@
 ./gradlew clean build
 ```
 
-需要 Java 25。Gradle 9.6.1 Wrapper 会校验分发包校验和。产物为 `build/libs/server-chat-history-0.2.0.jar`，`-sources.jar` 仅供开发。测试位于 `src/test`，HTML 报告位于 `build/reports/tests/test/`。GitHub Actions 构建并上传 JAR 和测试报告，不自动发布版本。
+使用 Java 25 运行 Gradle，同时安装 Java 21 工具链。Gradle 9.6.1 Wrapper 会校验分发包校验和。上述命令构建两个版本；`./gradlew :build` 仅构建 26.3，`./gradlew :mc1211:build` 仅构建 1.21.1。
+
+- 26.3：`build/libs/server-chat-history-0.2.0+mc26.3.jar`
+- 1.21.1：`versions/1.21.1/build/libs/server-chat-history-0.2.0+mc1.21.1.jar`
+
+`-sources.jar` 仅供开发。根目录 `src/` 保留原实现及共享代码、测试和资源；`versions/1.21.1/src/` 仅以相同路径替换依赖版本的 Java 文件，并增加本版本元数据和钩子。1.21.1 使用 Mojang 映射，正式 JAR 重映射为 intermediary 命名。完整公共适配层将在独立后续阶段实施。
+
+各项目 HTML 测试报告位于各自 `build/reports/tests/test/`。GitHub Actions 安装两套工具链，构建并上传两版 JAR 和测试报告，不自动发布版本。
 
 内部按采集、不可变记录、容量管理、补发策略、原版/增强发送、可选客户端适配、配置及存储分层。验证范围见 [验证清单](docs/TESTING.zh-CN.md)。
 

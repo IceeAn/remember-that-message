@@ -2,17 +2,24 @@
 
 [简体中文](README.zh-CN.md)
 
-A Fabric mod for **Minecraft Java 26.3** that replays a world's recent public chat when a player joins. Install it on the server; **vanilla clients do not need this mod or Fabric**. The same JAR optionally adds client preferences, a settings screen, and historical timestamps through Chat Patches or Chat Tools. It also supports the logical server in singleplayer and LAN worlds.
+A Fabric mod for **Minecraft Java 26.3 and 1.21.1** that replays a world's recent public chat when a player joins. Install it on the server; **vanilla clients do not need this mod or Fabric**. The same JAR optionally adds client preferences, a settings screen, and historical timestamps through Chat Patches or Chat Tools. It also supports the logical server in singleplayer and LAN worlds.
 
-Version 0.2.0 targets Java 25, Fabric Loader 0.20.1, and Fabric API 0.165.0+26.3. The project name is provisional; the mod ID is `server_chat_history`.
+Version 0.2.0 provides separate JARs for each Minecraft version, using Fabric Loader 0.20.1. The project name is provisional; the mod ID is `server_chat_history`.
 
 ## Install
 
-1. Set up a Fabric 26.3 server with Java 25 and Fabric Loader 0.20.1.
-2. Put Fabric API 0.165.0+26.3 and `server-chat-history-0.2.0.jar` in its `mods` directory.
+1. Set up a Fabric server with the matching Java version and Fabric Loader 0.20.1.
+2. Put the matching Fabric API and mod JAR from the table below in its `mods` directory.
 3. Start the server. The mod creates `config/server_chat_history.json` and a history file inside the world.
 
-For singleplayer or LAN hosting, install those mods in the host's Fabric game instance. Guests may use vanilla 26.3. This mod does not change authentication, secure profile enforcement, or the server EULA.
+| Minecraft | Java runtime | Fabric API | Mod JAR |
+| --- | --- | --- | --- |
+| 26.3 | 25 | 0.165.0+26.3 | `server-chat-history-0.2.0+mc26.3.jar` |
+| 1.21.1 | 21 | 0.116.17+1.21.1 | `server-chat-history-0.2.0+mc1.21.1.jar` |
+
+Install only the matching JAR. Cross-version enhanced replay through proxies and migration of history component JSON between Minecraft versions are not supported yet; preserve backups before changing versions.
+
+For singleplayer or LAN hosting, install those mods in the host's Fabric game instance. Guests may use vanilla clients of the same Minecraft version. This mod does not change authentication, secure profile enforcement, or the server EULA.
 
 ## What is recorded
 
@@ -76,7 +83,7 @@ Player notices use Simplified Chinese only for `zh_cn`, otherwise English. Conso
 
 ## Optional client installation
 
-Install the same JAR and Fabric API in a Fabric 26.3 client. Chat Patches, Chat Tools, Chat Heads and Mod Menu are **optional**, not bundled. Without a supported timestamp mod, all client preferences work; this mod adds no timestamp prefix or separate history panel.
+Install the matching JAR and Fabric API in a Fabric client of the same Minecraft version. Chat Patches, Chat Tools, Chat Heads and Mod Menu are **optional**, not bundled. Without a supported timestamp mod, all client preferences work; this mod adds no timestamp prefix or separate history panel.
 
 Use `/chathistoryclient` for the settings screen (also available through Mod Menu), or:
 
@@ -92,7 +99,7 @@ Use `/chathistoryclient` for the settings screen (also available through Mod Men
 /chathistoryclient reload
 ```
 
-These are local commands requiring no server permission. `config/server_chat_history-client.json` holds global preferences shared by all servers:
+These are local commands requiring no server permission. In 1.21.1, chat `RUN_COMMAND` clicks targeting `/chathistoryclient` are blocked; type the command or use a suggestion that you explicitly submit. `config/server_chat_history-client.json` holds global preferences shared by all servers:
 
 | Setting | Default and effect |
 | --- | --- |
@@ -109,7 +116,7 @@ A supporting client negotiates during configuration, with a two-second timeout. 
 
 “Narrator skips history” applies to subsequently received enhanced entries after saving or reloading. When disabled, successfully inserted entries use vanilla system-chat narration, which still respects Minecraft's narrator setting. It does not enable the narrator, reread existing history or clear queued speech. Large histories can queue up and delay live-message narration, so skipping is enabled by default. Live chat, batch notices and system-message fallback retain vanilla behavior; fallback messages cannot reliably be identified as history. Find the setting on the Narrator tab of `/chathistoryclient`.
 
-Enhanced replay also honors client-side account/launcher restrictions on receiving player chat. When player chat is prohibited, player history is neither displayed nor narrated; events use system-message reception rules. Sender blocking and friends-only restrictions remain in effect.
+Enhanced replay also honors client-side account/launcher restrictions on receiving player chat. When player chat is prohibited, player history is neither displayed nor narrated; events use system-message reception rules. Sender blocking remains in effect, as do friends-only restrictions where supported by Minecraft. The 1.21.1 port follows its native `ChatStatus` rules, including local-world exceptions.
 
 ## Historical time compatibility
 
@@ -117,13 +124,13 @@ All event times are **server capture times**, not client-declared send times. Th
 
 With both sides installed, server `auto`, and compatible Chat Patches integration enabled, the adapter supplies the stored time to Chat Patches for player chat and events. Chat Patches retains control of formatting, timezone, hover/context display, names, duplicate merging and logging. Its own time/system-message settings still apply. Server `system`, a vanilla client, or absent/disabled/failed integration cannot provide historical time through this adapter; Chat Patches may show reception time instead.
 
-The target is **Chat Patches 8.0.0+26.3-fabric**. Other versions are attempted only if the required interface/bytecode checks pass. Passing those checks is **not a completed live compatibility test**; client status marks the integration as unverified in game. An incompatibility or runtime failure disables the adapter, reports the reason and warns once per connection while basic history remains available. Already displayed batches are not resent.
+The target is **Chat Patches 8.0.0 for the matching Minecraft version**. Other versions are attempted only if the required interface/bytecode checks pass. Passing those checks is **not a completed live compatibility test**; client status marks the integration as unverified in game. An incompatibility or runtime failure disables the adapter, reports the reason and warns once per connection while basic history remains available. Already displayed batches are not resent.
 
 After setting `messageTimeIntegration=false` and restarting, this mod applies **no Chat Patches or Chat Tools time Mixins and supplies no historical time metadata to either mod**. Those mods still process ordinary chat according to their own settings. The switch does not disable this mod's independent networking or preferences.
 
 ### Chat Tools
 
-The additional target is **Chat Tools 2.4.5 for Fabric 26.3**, controlled by the same `messageTimeIntegration` setting. On the enhanced path, player chat and events use server-capture time for its timestamp prefix, hover date/time and message time metadata used by copying. Chat Tools retains its timestamp toggle, format and local timezone behavior; this mod does not add a second prefix itself or change its other HUD features. System fallback cannot supply historical time through this adapter.
+The additional target is **Chat Tools 2.4.5 for Fabric 26.3 or 1.21.1**, controlled by the same `messageTimeIntegration` setting. On the enhanced path, player chat and events use server-capture time for its timestamp prefix, hover date/time and message time metadata used by copying. Chat Tools retains its timestamp toggle, format and local timezone behavior; this mod does not add a second prefix itself or change its other HUD features. System fallback cannot supply historical time through this adapter.
 
 An optional Chat Patches queue hook carries this time through delayed insertion, independently of the Chat Heads toggle. If both timestamp mods enable their prefixes, both may appear; choose the desired display in their own settings. `/chathistoryclient status` reports each adapter separately. Missing or incompatible Chat Tools leaves basic history available. After disabling time compatibility and restarting, its time and time-queue hooks are not applied; the independent head queue hook may remain enabled.
 
@@ -131,7 +138,7 @@ Automated tests and headless checks with the official JAR verify time scopes, ac
 
 ## Chat Heads compatibility
 
-The Compatibility tab contains separate time and Chat Heads toggles. With Chat Heads **1.3.2 for 26.3**, enhanced player history enters its existing head-detection logic using the sender UUID and the current connection's player information. Its detection, placement and rendering settings remain authoritative. Events do not receive a player head through this adapter. A missing player profile falls back to Chat Heads' own detection; this mod adds no offline profile cache, skin requests or fake player-list entries, and does not promise offline avatars or historical skins.
+The Compatibility tab contains separate time and Chat Heads toggles. With Chat Heads **1.3.2 for 26.3 or 0.15.7 for 1.21.1**, enhanced player history enters its existing head-detection logic using the sender UUID and the current connection's player information. Its detection, placement and rendering settings remain authoritative. Events do not receive a player head through this adapter. A missing player profile falls back to Chat Heads' own detection; this mod adds no offline profile cache, skin requests or fake player-list entries, and does not promise offline avatars or historical skins.
 
 When Chat Patches **8.0.0+26.3-fabric** is also installed, an optional queue hook retains head metadata while its log loads, then restores it during insertion without decorating twice. This head-specific Chat Patches hook is independent of `messageTimeIntegration`; disabling time integration alone does not disable it. To disable this mod's head integration and queue hook, set `chatHeadsIntegration=false` and restart. Chat Heads' own behavior on ordinary messages remains intact. Missing/unsupported integrations leave basic history available; `status` lists their state and a runtime error disables head integration for the connection.
 
@@ -157,7 +164,14 @@ An invalid primary file is quarantined as `.corrupt-<uuid>` and the backup is tr
 ./gradlew clean build
 ```
 
-Use Java 25. The Gradle 9.6.1 wrapper verifies its distribution checksum. Build output is `build/libs/server-chat-history-0.2.0.jar`; the `-sources.jar` is for development. Tests are under `src/test`, and HTML results are under `build/reports/tests/test/`. GitHub Actions builds and uploads the JAR and test reports without publishing a release.
+Run Gradle with Java 25 and also install a Java 21 toolchain. The Gradle 9.6.1 wrapper verifies its distribution checksum. This command builds both targets; `./gradlew :build` builds only 26.3 and `./gradlew :mc1211:build` only 1.21.1.
+
+- 26.3: `build/libs/server-chat-history-0.2.0+mc26.3.jar`
+- 1.21.1: `versions/1.21.1/build/libs/server-chat-history-0.2.0+mc1.21.1.jar`
+
+The `-sources.jar` files are for development. Root `src/` contains the original implementation and shared code/tests/resources; `versions/1.21.1/src/` overrides only version-dependent Java files at matching paths and adds its own metadata and hooks. The 1.21.1 module uses Mojang mappings and produces an intermediary-remapped release JAR. A dedicated shared platform abstraction is a separate follow-up.
+
+HTML test reports are under each project's `build/reports/tests/test/`. GitHub Actions installs both toolchains and uploads both JARs and test reports without publishing a release.
 
 Internals separate capture, immutable records, bounded history, replay policy, vanilla/enhanced transport, optional client integration, configuration, and persistence. See [docs/TESTING.md](docs/TESTING.md) for validation scope.
 
