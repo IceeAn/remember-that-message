@@ -164,14 +164,20 @@ An invalid primary file is quarantined as `.corrupt-<uuid>` and the backup is tr
 ./gradlew clean build
 ```
 
-Run Gradle with Java 25 and also install a Java 21 toolchain. The Gradle 9.6.1 wrapper verifies its distribution checksum. This command builds both targets; `./gradlew :build` builds only 26.3 and `./gradlew :mc1211:build` only 1.21.1.
+Run Gradle with Java 25 and also install Java 17 and Java 21 toolchains. The Gradle 9.6.1 wrapper verifies its distribution checksum. This command builds both targets; `./gradlew :mc263:build` builds only 26.3 and `./gradlew :mc1211:build` only 1.21.1.
 
-- 26.3: `build/libs/server-chat-history-0.2.0+mc26.3.jar`
+- 26.3: `versions/26.3/build/libs/server-chat-history-0.2.0+mc26.3.jar`
 - 1.21.1: `versions/1.21.1/build/libs/server-chat-history-0.2.0+mc1.21.1.jar`
 
-The `-sources.jar` files are for development. Root `src/` contains the original implementation and shared code/tests/resources; `versions/1.21.1/src/` overrides only version-dependent Java files at matching paths and adds its own metadata and hooks. The 1.21.1 module uses Mojang mappings and produces an intermediary-remapped release JAR. A dedicated shared platform abstraction is a separate follow-up.
+The `-sources.jar` files are for development. The root project aggregates builds; it does not represent the newest Minecraft version.
 
-HTML test reports are under each project's `build/reports/tests/test/`. GitHub Actions installs both toolchains and uploads both JARs and test reports without publishing a release.
+- `common/`: independently compiled Java 17 business code, configuration, persistence, protocol contracts and language resources. It has no Minecraft or Fabric dependency. Run `./gradlew :common:test --tests '*PersistenceTest'` for a focused persistence check.
+- `platform-shared/src/`: explicit shared game adapters and integration tests, compiled against each target's dependencies. These sources may depend on Minecraft/Fabric; neither version inherits the other's files.
+- `versions/26.3/` and `versions/1.21.1/`: version-specific game APIs, network registration, client capabilities and optional mod hooks. The 1.21.1 release JAR is remapped to intermediary names.
+
+Each installable JAR contains the common classes/resources once and only its own platform implementation. No separate common mod is required. Business payload interfaces are implemented directly by game packets, without per-message wrapper allocation or JSON conversion. History-file format and protocol version remain unchanged; this separation does not add cross-version interoperability.
+
+HTML test reports are under each module's `build/reports/tests/test/`. GitHub Actions installs all three toolchains and uploads both installable JARs and all test reports without publishing a release.
 
 Internals separate capture, immutable records, bounded history, replay policy, vanilla/enhanced transport, optional client integration, configuration, and persistence. See [docs/TESTING.md](docs/TESTING.md) for validation scope.
 

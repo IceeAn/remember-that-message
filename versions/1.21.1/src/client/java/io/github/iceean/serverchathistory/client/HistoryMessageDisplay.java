@@ -18,15 +18,7 @@ final class HistoryMessageDisplay {
     static void display(HistoryProtocol.Item item, boolean systemAllowed, boolean playerAllowed, boolean senderRestricted,
                         boolean skipHistoryNarration, Consumer<Runnable> adapter,
                         Consumer<Component> insert, Consumer<Component> narrate) {
-        if (!systemAllowed || senderRestricted) return;
-        if (item.kind() == MessageKind.CHAT && !playerAllowed) return;
-
-        boolean[] inserted = {false};
-        adapter.accept(() -> {
-            insert.accept(item.content());
-            inserted[0] = true;
-        });
-        // Narration runs after metadata restoration, outside the optional adapter's error handling.
-        if (inserted[0] && !skipHistoryNarration) narrate.accept(item.content());
+        HistoryDisplay.display(item, systemAllowed, playerAllowed,
+                senderRestricted, skipHistoryNarration, adapter, insert, narrate);
     }
 }

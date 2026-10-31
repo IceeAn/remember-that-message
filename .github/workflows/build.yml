@@ -11,6 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
+        id: java17
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-java@v4
         id: java21
         with:
           distribution: temurin
@@ -21,12 +26,12 @@ jobs:
           distribution: temurin
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew clean build --console=plain "-Porg.gradle.java.installations.paths=${{ steps.java21.outputs.path }},${{ steps.java25.outputs.path }}"
+      - run: ./gradlew clean build --console=plain "-Porg.gradle.java.installations.paths=${{ steps.java17.outputs.path }},${{ steps.java21.outputs.path }},${{ steps.java25.outputs.path }}"
       - uses: actions/upload-artifact@v4
         with:
           name: server-chat-history
           path: |
-            build/libs/*.jar
+            versions/26.3/build/libs/*.jar
             versions/1.21.1/build/libs/*.jar
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
@@ -34,7 +39,9 @@ jobs:
         with:
           name: test-reports
           path: |
-            build/reports/tests/
-            build/test-results/
+            common/build/reports/tests/
+            common/build/test-results/
+            versions/26.3/build/reports/tests/
+            versions/26.3/build/test-results/
             versions/1.21.1/build/reports/tests/
             versions/1.21.1/build/test-results/

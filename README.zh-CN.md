@@ -164,14 +164,20 @@
 ./gradlew clean build
 ```
 
-使用 Java 25 运行 Gradle，同时安装 Java 21 工具链。Gradle 9.6.1 Wrapper 会校验分发包校验和。上述命令构建两个版本；`./gradlew :build` 仅构建 26.3，`./gradlew :mc1211:build` 仅构建 1.21.1。
+使用 Java 25 运行 Gradle，同时安装 Java 17 和 Java 21 工具链。Gradle 9.6.1 Wrapper 会校验分发包校验和。上述命令构建两个版本；`./gradlew :mc263:build` 仅构建 26.3，`./gradlew :mc1211:build` 仅构建 1.21.1。
 
-- 26.3：`build/libs/server-chat-history-0.2.0+mc26.3.jar`
+- 26.3：`versions/26.3/build/libs/server-chat-history-0.2.0+mc26.3.jar`
 - 1.21.1：`versions/1.21.1/build/libs/server-chat-history-0.2.0+mc1.21.1.jar`
 
-`-sources.jar` 仅供开发。根目录 `src/` 保留原实现及共享代码、测试和资源；`versions/1.21.1/src/` 仅以相同路径替换依赖版本的 Java 文件，并增加本版本元数据和钩子。1.21.1 使用 Mojang 映射，正式 JAR 重映射为 intermediary 命名。完整公共适配层将在独立后续阶段实施。
+`-sources.jar` 仅供开发。根项目统一构建各模块，不代表最新 Minecraft 版本。
 
-各项目 HTML 测试报告位于各自 `build/reports/tests/test/`。GitHub Actions 安装两套工具链，构建并上传两版 JAR 和测试报告，不自动发布版本。
+- `common/`：独立编译的 Java 17 业务、配置、持久化、协议契约及语言资源，不依赖 Minecraft 或 Fabric。可用 `./gradlew :common:test --tests '*PersistenceTest'` 单独验证持久化。
+- `platform-shared/src/`：显式共用的游戏适配及集成测试，分别按各版本依赖编译；允许依赖 Minecraft／Fabric，但版本之间不再隐式继承文件。
+- `versions/26.3/`、`versions/1.21.1/`：分版本的游戏 API、网络注册、客户端能力及可选联动钩子。1.21.1 正式 JAR 重映射为 intermediary 命名。
+
+每份可安装 JAR 只包含一份公共类／资源及自身适配，无需另装公共模组。游戏载荷直接实现业务数据接口，不逐消息分配额外包装对象或转换 JSON。历史格式及协议版本不变；本次分层不新增跨版本互通能力。
+
+各模块 HTML 测试报告位于各自 `build/reports/tests/test/`。GitHub Actions 安装三套工具链，上传两版可安装 JAR 及全部测试报告，不自动发布版本。
 
 内部按采集、不可变记录、容量管理、补发策略、原版/增强发送、可选客户端适配、配置及存储分层。验证范围见 [验证清单](docs/TESTING.zh-CN.md)。
 

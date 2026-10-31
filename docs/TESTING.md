@@ -4,7 +4,7 @@
 
 ## Automated checks
 
-Run `./gradlew clean build` using Java 25 with a Java 21 toolchain installed; this builds/tests both targets. JUnit Jupiter checks history retention/order, configuration recovery, permissions, localization, JSON/backup recovery, world isolation, asynchronous clear/save races, final flush, filtering and recipient chat visibility. Snapshot/cache tests cover changed versus unchanged ticks, shrinking, dirty clearing, shutdown records and lazy decoding.
+Run `./gradlew clean build` using Java 25 with Java 17 and Java 21 toolchains installed; this builds/tests both targets. JUnit Jupiter checks history retention/order, configuration recovery, permissions, localization, JSON/backup recovery, world isolation, asynchronous clear/save races, final flush, filtering and recipient chat visibility. Snapshot/cache tests cover changed versus unchanged ticks, shrinking, dirty clearing, shutdown records and lazy decoding.
 
 Version 0.2.0 adds format-2 round trips and rejection of older formats, server-capture timestamps, filtered rich components, client configuration validation, filtering before personal limits, opt-out selection, negotiation timeout/version mismatch, missing-channel fallback and forced-system preference retention. Protocol tests exercise the real Minecraft component codec and the custom history payload codec without player-chat signature validation.
 
@@ -12,9 +12,11 @@ Client compatibility contract tests check required Chat Patches method/field sha
 
 Client display regressions exercise real ChatAbilities (26.3) or ChatStatus (1.21.1) restrictions and GameNarrator routing with a mocked speech backend, without game/audio constructors. They cover default narration skipping, local configuration reload, adapter restoration order, and no speech or retry after rejected/failed display.
 
+Common adapter-boundary regressions cover filtering before limits, coalesced joins, missing players, boundary closure and recording recovery after replay failure, opt-out, final persistence and cache release. Both runtime Gson versions retain strict parsing checks. Release JAR inspection must verify that common classes appear exactly once and no other target implementation is bundled.
+
 ## Version-specific checks
 
-The 1.21.1 module shares the business regression suite and adds checks for strict parsing with its older Gson, intermediary bytecode contracts, attended client-command clicks, native account restrictions and system narration. Configuration-task tests cover waiting before start, reply/timeout completion exactly once on the owning server, disconnect and shutdown cancellation. The 26.3 tests run separately on Java 25; 1.21.1 tests run on Java 21.
+Business regressions run independently in `common` on Java 17. Both game modules run their version-specific and explicitly shared integration suites, including checks for strict parsing with its older Gson, intermediary bytecode contracts, attended client-command clicks, native account restrictions and system narration. Configuration-task tests cover waiting before start, reply/timeout completion exactly once on the owning server, disconnect and shutdown cancellation. The 26.3 tests run separately on Java 25; 1.21.1 tests run on Java 21.
 
 Headless checks of the **remapped release JAR** use official Chat Patches 8.0.0+1.21.1-fabric, Chat Tools 2.4.5+1.21.1 and Chat Heads 0.15.7-fabric-1.21. The matrix covers each mod alone, every pair, all three, no integrations, independent time/head switches, invalid configuration and the dedicated-server environment. It checks actual Mixin application, historical timestamp transformations, sender metadata and isolation from subsequent live messages. Registry bootstrap and fake client objects do not open a window or start a world, game connection or mod entrypoint.
 

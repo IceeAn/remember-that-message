@@ -2,6 +2,8 @@
 /local-files/
 /.gradle/
 /build/
+/common/build/
+/common/.gradle/
 /run/
 /out/
 /versions/**/build/

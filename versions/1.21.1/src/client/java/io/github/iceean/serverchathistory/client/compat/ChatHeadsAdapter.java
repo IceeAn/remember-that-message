@@ -2,7 +2,7 @@ package io.github.iceean.serverchathistory.client.compat;
 
 import com.google.common.collect.MapMaker;
 import io.github.iceean.serverchathistory.core.MessageKind;
-import io.github.iceean.serverchathistory.network.HistoryProtocol;
+import io.github.iceean.serverchathistory.network.ProtocolData;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -46,7 +46,7 @@ public final class ChatHeadsAdapter {
     }
     private Access access() { if (access == null) access = factory.get(); return access; }
 
-    public void display(HistoryProtocol.Item item, Function<UUID, PlayerInfo> lookup, Consumer<Component> insert) {
+    public void display(ProtocolData.Item<Component> item, Function<UUID, PlayerInfo> lookup, Consumer<Component> insert) {
         if (!enabled()) { insert.accept(item.content()); return; }
         State previous = null;
         State prepared = null;

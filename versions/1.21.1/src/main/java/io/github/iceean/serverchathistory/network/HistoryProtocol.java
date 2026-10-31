@@ -13,7 +13,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
 public final class HistoryProtocol {
-    public static final int VERSION = 1;
+    public static final int VERSION = ProtocolData.VERSION;
     private HistoryProtocol() { }
     private static <T extends CustomPacketPayload> CustomPacketPayload.Type<T> id(String name) {
         return new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath("server_chat_history", name));
@@ -25,40 +25,37 @@ public final class HistoryProtocol {
         return new ReplayPreferences(b.readBoolean(), b.readVarLong(), b.readUnsignedByte());
     }
     // The negotiation envelope stays stable across history protocol revisions.
-    public record Hello(int version) implements CustomPacketPayload {
+    public record Hello(int version) implements CustomPacketPayload, ProtocolData.Hello {
         public static final Type<Hello> TYPE = id("hello");
         public static final StreamCodec<FriendlyByteBuf, Hello> CODEC = CustomPacketPayload.codec(
                 (p, b) -> b.writeVarInt(p.version), b -> new Hello(b.readVarInt()));
         public Type<Hello> type() { return TYPE; }
     }
-    public record Preferences(int version, ReplayPreferences value) implements CustomPacketPayload {
+    public record Preferences(int version, ReplayPreferences value) implements CustomPacketPayload, ProtocolData.Preferences {
         public static final Type<Preferences> TYPE = id("preferences");
         public static final StreamCodec<FriendlyByteBuf, Preferences> CODEC = CustomPacketPayload.codec(
                 (p, b) -> { b.writeVarInt(p.version); preferences(b, p.value); },
                 b -> new Preferences(b.readVarInt(), preferences(b)));
         public Type<Preferences> type() { return TYPE; }
     }
-    public record Status(boolean negotiated, boolean enhanced, ReplayPreferences preferences, String reason) implements CustomPacketPayload {
+    public record Status(boolean negotiated, boolean enhanced, ReplayPreferences preferences, String reason) implements CustomPacketPayload, ProtocolData.Status {
         public static final Type<Status> TYPE = id("status_v1");
         public static final StreamCodec<FriendlyByteBuf, Status> CODEC = CustomPacketPayload.codec(
                 (p, b) -> { b.writeBoolean(p.negotiated); b.writeBoolean(p.enhanced); HistoryProtocol.preferences(b, p.preferences); b.writeUtf(p.reason, 128); },
                 b -> new Status(b.readBoolean(), b.readBoolean(), HistoryProtocol.preferences(b), b.readUtf(128)));
         public Type<Status> type() { return TYPE; }
     }
-    public record Boundary(boolean start, int count) implements CustomPacketPayload {
+    public record Boundary(boolean start, int count) implements CustomPacketPayload, ProtocolData.Boundary {
         public static final Type<Boundary> TYPE = id("boundary_v1");
-        public Boundary { if (count < 0) throw new IllegalArgumentException("Negative count"); }
+        public Boundary { ProtocolData.validateBoundary(count); }
         public static final StreamCodec<FriendlyByteBuf, Boundary> CODEC = CustomPacketPayload.codec(
                 (p, b) -> { b.writeBoolean(p.start); b.writeVarInt(p.count); }, b -> new Boundary(b.readBoolean(), b.readVarInt()));
         public Type<Boundary> type() { return TYPE; }
     }
-    public record Item(long sequence, MessageKind kind, Instant time, Component content, UUID senderId, String senderName) implements CustomPacketPayload {
+    public record Item(long sequence, MessageKind kind, Instant time, Component content, UUID senderId, String senderName) implements CustomPacketPayload, ProtocolData.Item<Component> {
         public static final Type<Item> TYPE = id("entry_v1");
         public Item {
-            if (sequence < 1 || kind == null || time == null || content == null) throw new IllegalArgumentException("Invalid history item");
-            if ((kind == MessageKind.CHAT) != (senderId != null) || (senderId == null) != (senderName == null))
-                throw new IllegalArgumentException("Invalid sender");
-            if (senderName != null && (senderName.isBlank() || senderName.length() > 16)) throw new IllegalArgumentException("Invalid name");
+            ProtocolData.validateItem(sequence, kind, time, content, senderId, senderName);
         }
         public static final StreamCodec<RegistryFriendlyByteBuf, Item> CODEC = CustomPacketPayload.codec((p, b) -> {
             b.writeVarLong(p.sequence); b.writeEnum(p.kind); b.writeLong(p.time.toEpochMilli());

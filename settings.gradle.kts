@@ -8,5 +8,6 @@ pluginManagement {
 
 rootProject.name = "server-chat-history"
 
-include(":mc1211")
+include(":common", ":mc263", ":mc1211")
+project(":mc263").projectDir = file("versions/26.3")
 project(":mc1211").projectDir = file("versions/1.21.1")

@@ -81,8 +81,7 @@ public final class ServerHistoryNetworking {
         });
     }
 
-    public record Delivery(ReplayPreferences preferences, boolean enhanced, boolean failed, String reason) { }
-    public static Delivery delivery(ServerPlayer player, ModConfig config) {
+    public static ReplayDelivery delivery(ServerPlayer player, ModConfig config) {
         if (player.connection == null) return resolve(null, false, config.replayMode());
         var state = CONNECTIONS.get(connection(player.connection));
         if (state == null) return resolve(null, false, config.replayMode());
@@ -94,12 +93,7 @@ public final class ServerHistoryNetworking {
             ServerPlayNetworking.send(player, new HistoryProtocol.Status(!result.failed(), result.enhanced(), result.preferences(), result.reason()));
         return result;
     }
-    static Delivery resolve(Negotiation state, boolean channels, ModConfig.ReplayMode mode) {
-        if (state == null) return new Delivery(ReplayPreferences.DEFAULT, false, false, "vanilla");
-        boolean ready = state.accepted() && channels;
-        boolean enhanced = ready && mode == ModConfig.ReplayMode.AUTO;
-        String reason = ready ? enhanced ? "enhanced" : "forced_system" : state.accepted() ? "missing_channel" : state.reason();
-        var prefs = ready ? state.preferences() : ReplayPreferences.DEFAULT;
-        return new Delivery(prefs, enhanced, !ready, reason);
+    static ReplayDelivery resolve(Negotiation state, boolean channels, ModConfig.ReplayMode mode) {
+        return ReplayDelivery.resolve(state, channels, mode);
     }
 }
