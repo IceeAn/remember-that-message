@@ -33,10 +33,12 @@ class HistoryMessageDisplayTest {
         assertFalse(abilities.canReceivePlayerMessages());
         boolean systemAllowed = restriction != ChatRestriction.CHAT_AND_COMMANDS_DISABLED_BY_OPTIONS;
         assertEquals(systemAllowed, abilities.canReceiveSystemMessages());
+        assertFalse(HistoryMessageDisplay.allowed(MessageKind.CHAT, abilities, false));
         HistoryMessageDisplay.display(item(MessageKind.CHAT), abilities, false, false,
                 ignored -> fail("Adapter must not run"), ignored -> fail("HUD must not run"), ignored -> fail("Narrator must not run"));
 
         for (var kind : MessageKind.values()) if (kind != MessageKind.CHAT) {
+            assertEquals(systemAllowed, HistoryMessageDisplay.allowed(kind, abilities, false));
             var calls = new ArrayList<String>();
             HistoryMessageDisplay.display(item(kind), abilities, false, false, Runnable::run,
                     ignored -> calls.add("display"), ignored -> calls.add("narrate"));
@@ -47,6 +49,7 @@ class HistoryMessageDisplayTest {
     @ParameterizedTest @EnumSource(MessageKind.class)
     void defaultSkipsNarrationButStillDisplaysEveryKind(MessageKind kind) {
         var message = item(kind); var displayed = new ArrayList<Component>();
+        assertTrue(HistoryMessageDisplay.allowed(kind, ChatAbilities.NO_RESTRICTIONS, false));
         HistoryMessageDisplay.display(message, ChatAbilities.NO_RESTRICTIONS, false,
                 ClientConfig.DEFAULT.skipHistoryNarration(), Runnable::run, displayed::add,
                 ignored -> fail("Default must not submit speech"));
@@ -56,6 +59,8 @@ class HistoryMessageDisplayTest {
     @Test void deniedSystemMessagesAndBlockedSendersDoNotEnterAdapterOrNarrator() {
         var denied = mock(ChatAbilities.class);
         when(denied.canReceivePlayerMessages()).thenReturn(true);
+        assertFalse(HistoryMessageDisplay.allowed(MessageKind.CHAT, ChatAbilities.NO_RESTRICTIONS, true));
+        assertFalse(HistoryMessageDisplay.allowed(MessageKind.CHAT, denied, false));
         for (var kind : MessageKind.values())
             HistoryMessageDisplay.display(item(kind), denied, false, false,
                     ignored -> fail(), ignored -> fail(), ignored -> fail());

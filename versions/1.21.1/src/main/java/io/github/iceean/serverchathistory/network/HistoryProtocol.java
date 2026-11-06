@@ -70,6 +70,7 @@ public final class HistoryProtocol {
         public Type<Item> type() { return TYPE; }
     }
     public static void register() {
+        GameNetworking.register();
         PayloadTypeRegistry.configurationS2C().register(Hello.TYPE, Hello.CODEC);
         PayloadTypeRegistry.configurationC2S().register(Preferences.TYPE, Preferences.CODEC);
         PayloadTypeRegistry.playS2C().register(Status.TYPE, Status.CODEC);

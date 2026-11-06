@@ -3,6 +3,8 @@ package io.github.iceean.serverchathistory.core;
 import io.github.iceean.serverchathistory.config.ConfigManager;
 import io.github.iceean.serverchathistory.storage.AsyncHistoryWriter;
 import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -14,6 +16,7 @@ public final class HistorySession<P> implements AutoCloseable {
     private final AsyncHistoryWriter writer;
     private final ReplayPlatform<P> platform;
     private final LinkedHashSet<UUID> pendingJoins = new LinkedHashSet<>();
+    private final Map<UUID, List<HistoryEntry>> waiting = new LinkedHashMap<>();
     private boolean replaying;
     private boolean dirty;
 
@@ -34,6 +37,9 @@ public final class HistorySession<P> implements AutoCloseable {
 
     public void configChanged() {
         buffer.resize(config.active().historyLimit());
+        var snapshot = buffer.snapshot();
+        long first = snapshot.entries().isEmpty() ? snapshot.nextSequence() : snapshot.entries().get(0).sequence();
+        waiting.replaceAll((id, entries) -> entries.stream().filter(entry -> entry.sequence() >= first).toList());
         saveSnapshot();
     }
 
@@ -45,12 +51,13 @@ public final class HistorySession<P> implements AutoCloseable {
 
     public CompletableFuture<Void> clear() {
         buffer.clear();
+        waiting.replaceAll((id, entries) -> List.of());
         platform.clearDecoded();
         dirty = false;
         return writer.clear(buffer.snapshot());
     }
 
-    public void joined(UUID player) { pendingJoins.add(player); }
+    public void joined(UUID player) { waiting.remove(player); pendingJoins.add(player); }
 
     public void tick() {
         if (dirty) saveSnapshot();
@@ -59,19 +66,27 @@ public final class HistorySession<P> implements AutoCloseable {
         var joined = pendingJoins.toArray(UUID[]::new);
         pendingJoins.clear();
         var entries = joined.length == 0 ? List.<HistoryEntry>of() : ReplayPolicy.RECENT.select(buffer.snapshot(), config.active());
-        for (var id : joined) {
+        for (var id : joined) waiting.putIfAbsent(id, entries);
+        boolean replayed = false;
+        var iterator = waiting.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var queued = iterator.next(); var id = queued.getKey();
             var player = platform.player(id);
-            if (player == null) continue;
-            try { replay(player, entries); }
+            if (player == null) { iterator.remove(); continue; }
+            if (!platform.ready(player)) continue;
+            iterator.remove(); replayed = true;
+            try { replay(player, queued.getValue()); }
             catch (RuntimeException failure) { platform.failed(id, failure); }
         }
+        // 等待期间已被主缓冲淘汰的记录可能刚被解码；批次结束后释放这些缓存。
+        if (replayed) platform.retainDecoded(buffer.snapshot());
     }
 
     private void replay(P player, List<HistoryEntry> history) {
         var delivery = platform.delivery(player, config.active());
         if (delivery.failed()) platform.notice(player, "negotiation_failed", true);
         if (!delivery.preferences().receiveHistory()) return;
-        var entries = ReplaySelection.latest(history, delivery.preferences(), entry -> platform.visible(player, entry));
+        var entries = ReplaySelection.latest(history, delivery.preferences(), entry -> config.active().includes(entry.message().kind()) && platform.visible(player, entry));
         if (delivery.enhanced()) platform.boundary(player, true, entries.size());
         replaying = true;
         try {
@@ -89,7 +104,7 @@ public final class HistorySession<P> implements AutoCloseable {
     }
 
     @Override public void close() {
-        pendingJoins.clear();
+        pendingJoins.clear(); waiting.clear();
         try {
             writer.flush(buffer.snapshot());
             writer.close();

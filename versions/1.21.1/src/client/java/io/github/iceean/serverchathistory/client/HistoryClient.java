@@ -4,7 +4,9 @@ import io.github.iceean.serverchathistory.ServerChatHistoryMod;
 import io.github.iceean.serverchathistory.client.compat.*;
 import io.github.iceean.serverchathistory.config.*;
 import io.github.iceean.serverchathistory.core.*;
-import io.github.iceean.serverchathistory.network.HistoryProtocol;
+import io.github.iceean.serverchathistory.network.*;
+import io.github.iceean.serverchathistory.minecraft.*;
+import io.github.iceean.serverchathistory.text.*;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.api.ClientModInitializer;
@@ -21,11 +23,13 @@ public final class HistoryClient implements ClientModInitializer {
     private static final HistoryTimeIntegrations INTEGRATIONS = HistoryTimeIntegrations.createDefault();
     private static final ChatHeadsAdapter HEADS = ChatHeadsAdapter.INSTANCE;
     private static volatile HistoryProtocol.Status status;
+    private static final ClientPlaySession PORTABLE = new ClientPlaySession();
     private static boolean batch;
     private static int remaining;
     private static long lastSequence;
     private static boolean pendingWarning;
     private static boolean warned;
+    private static boolean pendingConversionWarning, conversionWarned;
     public static boolean openRequested;
 
     @Override public void onInitializeClient() {
@@ -38,39 +42,32 @@ public final class HistoryClient implements ClientModInitializer {
             ServerChatHistoryMod.LOGGER.warn("Chat Heads history integration disabled: {}", failure);
             pendingWarning = true;
         });
+        GameClientNetworking.register();
         ClientConfigurationConnectionEvents.INIT.register((listener, client) -> reset());
         ClientConfigurationNetworking.registerGlobalReceiver(HistoryProtocol.Hello.TYPE, (payload, context) -> {
             if (ClientConfigurationNetworking.canSend(HistoryProtocol.Preferences.TYPE))
                 context.responseSender().sendPacket(new HistoryProtocol.Preferences(HistoryProtocol.VERSION, CONFIG.active().preferences()));
         });
-        ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Status.TYPE, (payload, context) -> {
-            status = payload;
-            if (payload.enhanced() && IntegrationBootstrap.ENABLED && INTEGRATIONS.hasUnavailableIntegration()) pendingWarning = true;
-            if (payload.enhanced() && ChatHeadsBootstrap.ENABLED && !HEADS.enabled() && !HEADS.state().equals("absent")) pendingWarning = true;
-        });
-        ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Boundary.TYPE, (payload, context) -> {
-            if (payload.start()) { batch = true; remaining = payload.count(); lastSequence = 0; }
-            else { batch = false; remaining = 0; }
-        });
-        ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Item.TYPE, (payload, context) -> {
-            if (status == null || !status.enhanced() || !batch || remaining <= 0 || payload.sequence() <= lastSequence) {
-                ServerChatHistoryMod.LOGGER.warn("Ignored history item outside the negotiated batch"); return;
-            }
-            remaining--; lastSequence = payload.sequence();
-            var client = context.client(); var player = context.player();
-            boolean senderRestricted = payload.senderId() != null
-                    && (client.isBlocked(payload.senderId()));
-            HistoryMessageDisplay.display(payload, client.options.chatVisibility().get() != ChatVisiblity.HIDDEN,
-                    HistoryMessageDisplay.playerAllowed(client.options.chatVisibility().get(), client.getChatStatus(), client.isLocalServer()), senderRestricted, CONFIG.active().skipHistoryNarration(),
-                    insert -> INTEGRATIONS.display(payload, insert),
-                    content -> HEADS.display(payload, id -> client.getConnection().getPlayerInfo(id),
-                            decorated -> client.gui.getChat().addMessage(decorated)),
-                    content -> client.getNarrator().say(content));
-        });
+        ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Status.TYPE, (payload, context) -> { if (!PORTABLE.active()) acceptStatus(payload); });
+        ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Boundary.TYPE, (payload, context) -> { if (!PORTABLE.active()) boundary(payload.start(), payload.count()); });
+        ClientPlayNetworking.registerGlobalReceiver(HistoryProtocol.Item.TYPE, (payload, context) -> { if (!PORTABLE.active()) acceptItem(payload); });
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> reset());
         ClientConfigurationConnectionEvents.DISCONNECT.register((listener, client) -> reset());
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (openRequested) { openRequested = false; client.setScreen(new HistoryConfigScreen(null)); }
+            if (client.player != null) {
+                var incomplete = PORTABLE.takeIncomplete();
+                if (incomplete != null) {
+                    pendingConversionWarning = false; conversionWarned = true;
+                    client.gui.getChat().addMessage(text("incomplete_history"));
+                    ServerChatHistoryMod.LOGGER.warn("Incomplete history replay: expected={}, received={}, unavailable={}, end={}",
+                            incomplete.expected(), incomplete.received(), incomplete.unavailable(), incomplete.endCount());
+                }
+            }
+            if (pendingConversionWarning && !conversionWarned && client.player != null) {
+                pendingConversionWarning = false; conversionWarned = true;
+                client.gui.getChat().addMessage(text("conversion_warning"));
+            }
             if (pendingWarning && !warned && client.player != null) {
                 pendingWarning = false; warned = true;
                 client.gui.getChat().addMessage(text("integration_warning"));
@@ -78,10 +75,76 @@ public final class HistoryClient implements ClientModInitializer {
         });
         ClientCommands.register();
     }
-    private static void reset() {
+    public static void reset() {
+        PORTABLE.reset(); pendingConversionWarning = false; conversionWarned = false;
         status = null; batch = false; remaining = 0; lastSequence = 0; pendingWarning = false; warned = false;
         INTEGRATIONS.resetConnection();
         HEADS.resetConnection();
+    }
+    private static void acceptStatus(HistoryProtocol.Status payload) {
+        status = payload;
+        if (payload.enhanced() && IntegrationBootstrap.ENABLED && INTEGRATIONS.hasUnavailableIntegration()) pendingWarning = true;
+        if (payload.enhanced() && ChatHeadsBootstrap.ENABLED && !HEADS.enabled() && !HEADS.state().equals("absent")) pendingWarning = true;
+    }
+    private static void boundary(boolean start, int count) {
+        batch = start; remaining = start ? count : 0;
+        if (start) lastSequence = 0;
+    }
+    private static boolean acceptSequence(long sequence) {
+        if (status == null || !status.enhanced() || !batch || remaining <= 0 || sequence <= lastSequence) return false;
+        remaining--; lastSequence = sequence;
+        return true;
+    }
+    private static void acceptItem(HistoryProtocol.Item payload) {
+        if (acceptSequence(payload.sequence())) displayItem(payload, false);
+    }
+    private static boolean canReceive(MessageKind kind, java.util.UUID senderId) {
+        var client = Minecraft.getInstance(); var player = client.player;
+        if (player == null || client.getConnection() == null) return false;
+        boolean senderRestricted = senderId != null && (client.isBlocked(senderId));
+        return HistoryMessageDisplay.allowed(kind, client.options.chatVisibility().get() != ChatVisiblity.HIDDEN,
+                HistoryMessageDisplay.playerAllowed(client.options.chatVisibility().get(), client.getChatStatus(), client.isLocalServer()), senderRestricted);
+    }
+    private static void displayItem(HistoryProtocol.Item payload, boolean placeholder) {
+        var presentation = PortableItemDecoder.presentation(payload, placeholder);
+            var client = Minecraft.getInstance(); var player = client.player;
+            if (player == null || client.getConnection() == null) return;
+            boolean senderRestricted = payload.senderId() != null
+                    && (client.isBlocked(payload.senderId()));
+            HistoryMessageDisplay.display(payload, client.options.chatVisibility().get() != ChatVisiblity.HIDDEN,
+                    HistoryMessageDisplay.playerAllowed(client.options.chatVisibility().get(), client.getChatStatus(), client.isLocalServer()), senderRestricted, CONFIG.active().skipHistoryNarration(),
+                    insert -> INTEGRATIONS.display(presentation, insert),
+                    content -> HEADS.display(presentation, id -> client.getConnection().getPlayerInfo(id),
+                            decorated -> client.gui.getChat().addMessage(decorated)),
+                    content -> client.getNarrator().say(content));
+    }
+    public static void receivePortable(byte[] bytes) {
+        try {
+            var frame = PortableProtocol.decode(bytes);
+            if (frame instanceof PortableProtocol.Hello hello) {
+                if (PORTABLE.active()) return;
+                reset();
+                if (PORTABLE.hello(hello)) GameClientNetworking.send(PortableProtocol.encode(new PortableProtocol.Reply(
+                        hello.session(), PortableProtocol.VERSION, GameTextFormat.CURRENT.componentEncoding(), CONFIG.active().preferences())));
+                return;
+            }
+            if (!PORTABLE.accept(frame)) return;
+            if (frame instanceof PortableProtocol.Status value) acceptStatus(new HistoryProtocol.Status(true, value.enhanced(), value.preferences(), value.reason()));
+            else if (frame instanceof PortableProtocol.Boundary value) boundary(value.start(), value.count());
+            else if (frame instanceof PortableProtocol.Item value) {
+                if (!acceptSequence(value.sequence())) return;
+                PortableItemDecoder.receive(value, PORTABLE, canReceive(value.kind(), value.senderId()), () -> {
+                    var client = Minecraft.getInstance();
+                    if (client.level == null) throw new IllegalStateException("Missing client world during history replay");
+                    return new MessageCodec(client.level.registryAccess());
+                }, decoded -> {
+                    displayItem(decoded.item(), decoded.placeholder());
+                    if (decoded.simplified()) pendingConversionWarning = true;
+                });
+            }
+        } catch (RuntimeException failure) {
+            ServerChatHistoryMod.LOGGER.warn("Ignored invalid portable history: {}", failure.toString());
+        }
     }
     public static List<Component> statusLines() {
         var lines = new ArrayList<Component>();

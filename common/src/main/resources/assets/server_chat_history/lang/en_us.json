@@ -67,5 +67,10 @@
   "server_chat_history.client.compatibility": "Compatibility",
   "server_chat_history.client.setting.chatHeadsIntegration": "Chat Heads compatibility",
   "server_chat_history.client.heads_switch": "Chat Heads compatibility: saved=%s, startup=%s",
-  "server_chat_history.client.heads_hint": "Uses Chat Heads settings and available player information. No additional offline profiles or skin lookups. Restart after changing compatibility settings."
+  "server_chat_history.client.heads_hint": "Uses Chat Heads settings and available player information. No additional offline profiles or skin lookups. Restart after changing compatibility settings.",
+  "server_chat_history.client.unavailable_entry": "[Chat History] This record could not be displayed.",
+  "server_chat_history.client.incomplete_history": "[Chat History] Replay was incomplete: some records were missing or could not be displayed. Other records have been kept.",
+  "server_chat_history.client.conversion_warning": "Some cross-version history was simplified; original interactions or formatting may be unavailable.",
+  "migration_status": "History migration: {0} -> {1}; {2} records; {3} simplified; losses: {4}",
+  "migration_failed": "History migration stopped, original retained: {0}"
 }

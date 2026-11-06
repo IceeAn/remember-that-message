@@ -11,6 +11,10 @@ import net.minecraft.network.chat.Component;
 final class HistoryMessageDisplay {
     private HistoryMessageDisplay() { }
 
+    static boolean allowed(MessageKind kind, boolean systemAllowed, boolean playerAllowed, boolean senderRestricted) {
+        return HistoryDisplay.allowed(kind, systemAllowed, playerAllowed, senderRestricted);
+    }
+
     static boolean playerAllowed(ChatVisiblity visibility, Minecraft.ChatStatus status, boolean local) {
         return visibility == ChatVisiblity.FULL && status.isChatAllowed(local);
     }

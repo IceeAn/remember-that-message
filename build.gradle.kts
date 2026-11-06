@@ -10,5 +10,5 @@ allprojects {
     repositories { mavenCentral() }
 }
 
-tasks.named("build") { dependsOn(":common:build", ":mc263:build", ":mc1211:build") }
-tasks.named("clean") { dependsOn(":common:clean", ":mc263:clean", ":mc1211:clean") }
+tasks.named("build") { dependsOn(":common:build", ":mc263:build", ":mc1211:build", ":mc1201:build") }
+tasks.named("clean") { dependsOn(":common:clean", ":mc263:clean", ":mc1211:clean", ":mc1201:clean") }

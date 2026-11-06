@@ -32,7 +32,7 @@ class WorldHistoryTest {
         SharedConstants.tryDetectVersion(); Bootstrap.bootStrap();
         var types = new MappedRegistry<>(Registries.CHAT_TYPE, Lifecycle.stable());
         types.register(ChatType.CHAT, new ChatType(ChatTypeDecoration.withSender("chat.type.text"),
-                ChatTypeDecoration.withSender("chat.type.text.narrate")), RegistrationInfo.BUILT_IN);
+                ChatTypeDecoration.withSender("chat.type.text.narrate")), Lifecycle.stable());
         registries = new RegistryAccess.ImmutableRegistryAccess(List.of(types.freeze())).freeze();
     }
 
@@ -58,7 +58,7 @@ class WorldHistoryTest {
     }
 
     private HistorySnapshot saved() throws Exception {
-        return JsonSupport.GSON.fromJson(Files.readString(file), HistorySnapshot.class);
+        return JsonSupport.GSON.fromJson(Files.readString(file), io.github.iceean.serverchathistory.storage.HistoryFile.class).snapshot();
     }
 
     @Test void recordsWaitUntilTickAndUnchangedTicksDoNotWrite() throws Exception {
@@ -82,8 +82,8 @@ class WorldHistoryTest {
         assertTrue(saved().entries().isEmpty());
         history.tick(); awaitWrites();
         assertEquals(1, saved().entries().size());
-        assertEquals(2, saved().entries().getFirst().sequence());
-        assertEquals("\"new\"", saved().entries().getFirst().message().renderedJson());
+        assertEquals(2, saved().entries().get(0).sequence());
+        assertEquals("\"new\"", saved().entries().get(0).message().renderedJson());
     }
 
     @Test void configurationShrinkPersistsDirtyHistoryImmediately() throws Exception {
@@ -92,13 +92,13 @@ class WorldHistoryTest {
         history.config().set("historyLimit", "1");
         history.configChanged(); awaitWrites();
         assertEquals(1, saved().entries().size());
-        assertEquals(2, saved().entries().getFirst().sequence());
+        assertEquals(2, saved().entries().get(0).sequence());
     }
 
     @Test void shutdownFlushesRecordsReceivedAfterTheLastTick() throws Exception {
         history.record(Fixtures.message(MessageKind.LEAVE, "final leave"));
         history.close(); history = null;
-        assertEquals("\"final leave\"", saved().entries().getFirst().message().renderedJson());
+        assertEquals("\"final leave\"", saved().entries().get(0).message().renderedJson());
     }
 
     @Test void joinTickIncludesNewEventsForEveryRecipientAndClearInvalidatesReplay() throws Exception {
@@ -111,7 +111,6 @@ class WorldHistoryTest {
             var id = UUID.randomUUID();
             when(player.getUUID()).thenReturn(id);
             when(player.getChatVisibility()).thenReturn(ChatVisiblity.FULL);
-            when(player.clientInformation()).thenReturn(ClientInformation.createDefault());
             when(players.getPlayer(id)).thenReturn(player);
             var output = new ArrayList<String>(); outputs.add(output); recipients.add(player);
             doAnswer(call -> { output.add(((Component) call.getArgument(0)).getString()); return null; })

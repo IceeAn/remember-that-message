@@ -100,7 +100,7 @@ class ChatHeadsAdapterTest {
             messages.add(content); adapter.captureQueued(content);
         });
         adapter.resetConnection();
-        adapter.replayQueued(messages.getFirst(), () -> assertSame(original, backend.state));
+        adapter.replayQueued(messages.get(0), () -> assertSame(original, backend.state));
     }
     @Test void preparationFailureFallsBackOnceAndDisablesOnlyUntilReset() {
         var backend = new Backend(); backend.fail = true; var original = backend.state;

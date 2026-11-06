@@ -32,6 +32,10 @@
     {
       "config": "server_chat_history.chattools.mixins.json",
       "environment": "client"
+    },
+    {
+      "config": "server_chat_history.common.mixins.json",
+      "environment": "client"
     }
   ],
   "depends": {

@@ -70,6 +70,7 @@ public final class HistoryProtocol {
         public Type<Item> type() { return TYPE; }
     }
     public static void register() {
+        GameNetworking.register();
         PayloadTypeRegistry.clientboundConfiguration().register(Hello.TYPE, Hello.CODEC);
         PayloadTypeRegistry.serverboundConfiguration().register(Preferences.TYPE, Preferences.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(Status.TYPE, Status.CODEC);

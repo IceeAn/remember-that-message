@@ -50,6 +50,10 @@ class HistoryMessageDisplayTest {
             assertEquals(expected, HistoryMessageDisplay.playerAllowed(net.minecraft.world.entity.player.ChatVisiblity.FULL, status, local));
             assertFalse(HistoryMessageDisplay.playerAllowed(net.minecraft.world.entity.player.ChatVisiblity.SYSTEM, status, local));
             assertFalse(HistoryMessageDisplay.playerAllowed(net.minecraft.world.entity.player.ChatVisiblity.HIDDEN, status, local));
+            assertEquals(expected, HistoryMessageDisplay.allowed(MessageKind.CHAT, true, expected, false));
+            assertTrue(HistoryMessageDisplay.allowed(MessageKind.JOIN, true, expected, false));
+            assertFalse(HistoryMessageDisplay.allowed(MessageKind.CHAT, true, true, true));
+            assertFalse(HistoryMessageDisplay.allowed(MessageKind.JOIN, false, expected, false));
             var calls = new ArrayList<String>();
             HistoryMessageDisplay.display(item(MessageKind.CHAT), true, expected, false, false, Runnable::run,
                     ignored -> calls.add("display"), ignored -> calls.add("narrate"));

@@ -4,9 +4,13 @@
 
 ## Automated checks
 
-Run `./gradlew clean build` using Java 25 with Java 17 and Java 21 toolchains installed; this builds/tests both targets. JUnit Jupiter checks history retention/order, configuration recovery, permissions, localization, JSON/backup recovery, world isolation, asynchronous clear/save races, final flush, filtering and recipient chat visibility. Snapshot/cache tests cover changed versus unchanged ticks, shrinking, dirty clearing, shutdown records and lazy decoding.
+Run `./gradlew clean build` using Java 25 with Java 17 and Java 21 toolchains installed; this builds/tests all three targets. JUnit Jupiter checks history retention/order, configuration recovery, permissions, localization, JSON/backup recovery, world isolation, asynchronous clear/save races, final flush, filtering and recipient chat visibility. Snapshot/cache tests cover changed versus unchanged ticks, shrinking, dirty clearing, shutdown records and lazy decoding.
 
-Version 0.2.0 adds format-2 round trips and rejection of older formats, server-capture timestamps, filtered rich components, client configuration validation, filtering before personal limits, opt-out selection, negotiation timeout/version mismatch, missing-channel fallback and forced-system preference retention. Protocol tests exercise the real Minecraft component codec and the custom history payload codec without player-chat signature validation.
+Version 0.2.0 covers format-3 round trips, known format-2 upgrades and unknown-format preservation, server-capture timestamps, filtered rich components, client configuration validation, filtering before personal limits, opt-out selection, negotiation timeout/version mismatch, missing-channel fallback and forced-system preference retention. Protocol tests exercise the real Minecraft component codec and the custom history payload codec without player-chat signature validation.
+
+Cross-version regressions use actual target parsers to check URL, page-number and command-character constraints. Unsupported click interactions are removed locally with loss reporting; readable and filtered bodies survive and migrated history remains writable. Connection lifecycle tests cover player replacement retaining Play sessions, opt-out preferences and 1.20.1 language, connection isolation, disconnection and per-server cleanup. Actual respawn event ordering still requires live validation.
+
+Replay failure regressions cover a normal/oversized/normal sequence, filtered failures never exposing raw text, native placeholder parsing and client-side decode failures. Batch checks cover missing items, mismatched end counts, unavailable records, one-time reporting, duplicate/late rejection and backend resets. Normal account restrictions and blocking are not failures; placeholders cannot bypass them or provide player attribution to timestamp/head adapters. Cross-check valid, placeholder, malformed and simplified bodies against client restrictions: rejected items count as received without decoding or warning, and following permitted items still display. Permitted decode/display failures must still be reported. Network-send failures must still abort rather than being swallowed as record failures.
 
 Client compatibility contract tests check required Chat Patches method/field shapes and queued timestamp metadata. They do not run Chat Patches rendering or apply the mixin in a game. Server/player fixtures do not create a running world or network connection. These tests cannot establish real event ordering, actual UI behavior, disconnection cleanup, Fabric injection or live compatibility.
 
@@ -16,11 +20,11 @@ Common adapter-boundary regressions cover filtering before limits, coalesced joi
 
 ## Version-specific checks
 
-Business regressions run independently in `common` on Java 17. Both game modules run their version-specific and explicitly shared integration suites, including checks for strict parsing with its older Gson, intermediary bytecode contracts, attended client-command clicks, native account restrictions and system narration. Configuration-task tests cover waiting before start, reply/timeout completion exactly once on the owning server, disconnect and shutdown cancellation. The 26.3 tests run separately on Java 25; 1.21.1 tests run on Java 21.
+Business regressions run independently in `common` on Java 17. All three game modules run their version-specific and explicitly shared integration suites, including checks for strict parsing with its older Gson, intermediary bytecode contracts, attended client-command clicks, native account restrictions and system narration. Configuration-task tests cover waiting before start, reply/timeout completion exactly once on the owning server, disconnect and shutdown cancellation. The 26.3 tests run separately on Java 25; 1.21.1 tests run on Java 21.
 
 Headless checks of the **remapped release JAR** use official Chat Patches 8.0.0+1.21.1-fabric, Chat Tools 2.4.5+1.21.1 and Chat Heads 0.15.7-fabric-1.21. The matrix covers each mod alone, every pair, all three, no integrations, independent time/head switches, invalid configuration and the dedicated-server environment. It checks actual Mixin application, historical timestamp transformations, sender metadata and isolation from subsequent live messages. Registry bootstrap and fake client objects do not open a window or start a world, game connection or mod entrypoint.
 
-Repeat the manual matrix below for **both targets**, using the matching versions listed in the README. In 1.21.1 also verify that clicking a `RUN_COMMAND` text cannot change local settings, while typed commands and explicitly submitted suggestions work. Check local-world chat restrictions against native 1.21.1 behavior; only ALL/SYSTEM narration modes read system history when skipping is disabled. Cross-version proxies and history migration are outside this stage.
+Repeat the manual matrix below for **all three targets**, using the matching versions listed in the README. In 1.21.1 also verify that clicking a `RUN_COMMAND` text cannot change local settings, while typed commands and explicitly submitted suggestions work. Check local-world chat restrictions against native 1.21.1 behavior; only ALL/SYSTEM narration modes read system history when skipping is disabled. Use the third-stage checklist below for migration and proxy switching; live interoperability remains unverified.
 
 ## Manual acceptance — separate confirmation required
 
@@ -28,7 +32,7 @@ Use disposable installations and worlds. Record exact mod/client/server versions
 
 | Scenario | Expected result |
 | --- | --- |
-| Fabric dedicated server, matching vanilla client (26.3 and 1.21.1) | Connects without client mods; eligible history uses system chat; next live chat works. No extra negotiation delay. |
+| Fabric dedicated server, matching vanilla client (26.3, 1.21.1 and 1.20.1) | Connects without client mods; eligible history uses system chat; next live chat works. Play replay waits at most approximately two seconds without blocking world entry. |
 | Both sides installed; client without Chat Patches, Chat Tools or Mod Menu | History, local commands, settings and status work independently. No standalone timestamp prefix. |
 | Online mode with secure profiles on/off; offline mode | History works without changing policy or sending temporary player identities/sessions. |
 | `auto` versus `system` | `auto` enhances compatible connections; `system` uses vanilla messages but retains accepted personal preferences. |
@@ -36,6 +40,7 @@ Use disposable installations and worlds. Record exact mod/client/server versions
 | Receive disabled; empty history; invalid server config | Successfully negotiated opt-out suppresses history and routine notices, including configuration errors. |
 | Config-stage timeout, unsupported protocol or missing play channel | Join continues using server defaults with a warning. Accepted/current state is shown accurately; late replies cannot change it. |
 | Disconnect/reconnect and server change | Negotiation and one-per-connection failure notices reset; global saved preferences remain. |
+| Respawn during join negotiation; ordinary death respawn or return from the End | Opt-out preferences survive player replacement; 1.20.1 localized command replies do not revert to English when the old player instance is collected. |
 | Client screen, commands and optional Mod Menu | Saving/reloading works without server permissions; saved versus current values are clear; ordinary preferences apply next connection. |
 | Chat Patches 8.0.0 for each target, enhanced path | Old player chat and all event types show server-capture time in configured timestamp, hover and context display; timezone follows Chat Patches. |
 | Chat Patches timestamp/system-time toggles, names and duplicate merging | User settings remain authoritative; event messages respect system-time settings; merging/names/logging still work. |
@@ -87,3 +92,11 @@ Regressions cover every record type, timezones/DST, scope restoration, equal-tex
 | Time integration disabled and restarted, absent or unsupported mod | Corresponding time hooks stay inactive, basic history works, status explains why; head toggle remains independent. |
 | Chat Tools duplicate merging, copy menu and history refresh | Follow upstream display/copy rules without repeated timestamp decoration; check merged time semantics and metadata. |
 | Forced system fallback | Historical time is not promised; Chat Tools may show reception time. |
+
+## Third-stage acceptance
+
+Automated checks cover actual component parsers on all three targets, every migration direction, separate filtered text, loss reports, one migration backup, unknown-format write blocking, native fast paths, shared lazy-cache eviction, session tokens, duplicate/late entries, boundaries, UTF-8/size limits, timeouts and frozen join candidates. 1.20.1 uses Java 17; verify legacy channels, language capture and Chat Patches' five-argument queue. Check actual backend-login reset injection on all targets.
+
+Run 12 release-JAR headless combinations per target: no integrations, each mod alone, each pair, all three, time disabled, heads disabled, invalid settings and server environment. The 1.20.1 candidates are Chat Patches 8.0.0+1.20.1-fabric, Chat Tools 2.4.5+1.20.1 and Chat Heads 0.15.7-fabric-1.20. This does not establish real rendering, restore ordering or proxy forwarding.
+
+With separate approval, test matching vanilla clients; all client/backend version pairs through the proxy; A -> B -> unmodded -> A; switching/disconnecting during negotiation; late messages; same-dimension switching; client opt-out; and blocked channels falling back exactly once. Use disposable migration files to verify the original `.previous-version`, new-format `.bak`, loss status, write blocking on failure and recovery after explicit clear. Chat-file conversion does not make downgrading Minecraft worlds safe or supported.

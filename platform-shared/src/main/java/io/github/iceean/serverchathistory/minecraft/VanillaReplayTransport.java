@@ -1,10 +1,9 @@
 package io.github.iceean.serverchathistory.minecraft;
 
 import io.github.iceean.serverchathistory.core.*;
-import io.github.iceean.serverchathistory.network.HistoryProtocol;
+import io.github.iceean.serverchathistory.network.*;
 import java.util.List;
 import java.util.UUID;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.ChatVisiblity;
@@ -36,9 +35,16 @@ public final class VanillaReplayTransport implements ReplayTransport {
     }
     @Override public void send(ServerPlayer recipient, List<HistoryEntry> entries, boolean enhanced) {
         for (var entry : entries) {
+            if (!visible(recipient, entry)) continue;
             var message = entry.message(); var chat = message.chat();
+            if (enhanced && PortableServerNetworking.active(recipient)) {
+                boolean filtered = chat != null && chat.filtering() == HistoryEntry.Filtering.PARTIAL
+                        && needsFiltering(chat, recipient.getUUID(), recipient.isTextFilteringEnabled());
+                PortableServerNetworking.item(recipient, entry, filtered, cache);
+                continue;
+            }
             var content = content(recipient, entry);
-            if (enhanced) ServerPlayNetworking.send(recipient, new HistoryProtocol.Item(entry.sequence(), message.kind(),
+            if (enhanced) GameNetworking.legacyItem(recipient, new HistoryProtocol.Item(entry.sequence(), message.kind(),
                     message.time(), content, chat == null ? null : chat.senderId(), chat == null ? null : chat.senderName()));
             else recipient.sendSystemMessage(content);
         }

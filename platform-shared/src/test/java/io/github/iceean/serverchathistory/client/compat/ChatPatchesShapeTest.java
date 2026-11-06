@@ -29,10 +29,10 @@ class ChatPatchesShapeTest {
         nodes = shape(); nodes[1].methods.clear(); assertFalse(compatible(nodes));
     }
     @Test void rejectsChangedDescriptorsAndInaccessibleOrImmutableMetadata() {
-        var nodes = shape(); nodes[0].methods.getFirst().desc = "(Ljava/util/Date;)V"; assertFalse(compatible(nodes));
-        nodes = shape(); nodes[0].methods.getFirst().access |= Opcodes.ACC_STATIC; assertFalse(compatible(nodes));
-        nodes = shape(); nodes[1].fields.getFirst().access |= Opcodes.ACC_FINAL; assertFalse(compatible(nodes));
-        nodes = shape(); nodes[2].methods.getFirst().access = Opcodes.ACC_PRIVATE; assertFalse(compatible(nodes));
+        var nodes = shape(); nodes[0].methods.get(0).desc = "(Ljava/util/Date;)V"; assertFalse(compatible(nodes));
+        nodes = shape(); nodes[0].methods.get(0).access |= Opcodes.ACC_STATIC; assertFalse(compatible(nodes));
+        nodes = shape(); nodes[1].fields.get(0).access |= Opcodes.ACC_FINAL; assertFalse(compatible(nodes));
+        nodes = shape(); nodes[2].methods.get(0).access = Opcodes.ACC_PRIVATE; assertFalse(compatible(nodes));
     }
     @Test void mixinStartsDisabledAndTaggedDatePreservesTimeAndEventKind() {
         assertFalse(new ChatPatchesMixinPlugin().shouldApplyMixin("unused", "unused"));

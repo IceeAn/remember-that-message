@@ -22,18 +22,18 @@ class ChatToolsShapeTest {
     }
     @Test void checksBothClockSitesAndCopyMetadata() {
         var nodes = shape(); assertTrue(ChatToolsMixinPlugin.compatible(nodes[0], nodes[1]));
-        nodes[0].methods.getFirst().instructions.remove(nodes[0].methods.getFirst().instructions.getFirst());
+        nodes[0].methods.get(0).instructions.remove(nodes[0].methods.get(0).instructions.getFirst());
         assertFalse(ChatToolsMixinPlugin.compatible(nodes[0], nodes[1]));
-        nodes = shape(); nodes[0].methods.removeLast();
+        nodes = shape(); nodes[0].methods.remove(nodes[0].methods.size() - 1);
         assertFalse(ChatToolsMixinPlugin.compatible(nodes[0], nodes[1]));
-        nodes = shape(); nodes[1].methods.getFirst().instructions.clear();
+        nodes = shape(); nodes[1].methods.get(0).instructions.clear();
         assertFalse(ChatToolsMixinPlugin.compatible(nodes[0], nodes[1]));
     }
     @Test void rejectsAmbiguousClocksAndChangedConstructorAndStartsDisabled() {
         var nodes = shape();
-        nodes[0].methods.getFirst().instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/time/Instant", "now", "()Ljava/time/Instant;"));
+        nodes[0].methods.get(0).instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/time/Instant", "now", "()Ljava/time/Instant;"));
         assertFalse(ChatToolsMixinPlugin.compatible(nodes[0], nodes[1]));
-        nodes = shape(); nodes[1].methods.getFirst().desc = "()V";
+        nodes = shape(); nodes[1].methods.get(0).desc = "()V";
         assertFalse(ChatToolsMixinPlugin.compatible(nodes[0], nodes[1]));
         assertFalse(new ChatToolsMixinPlugin().shouldApplyMixin("unused", "unused"));
     }

@@ -67,5 +67,10 @@
   "server_chat_history.client.compatibility": "兼容",
   "server_chat_history.client.setting.chatHeadsIntegration": "Chat Heads 头像兼容",
   "server_chat_history.client.heads_switch": "Chat Heads 头像兼容：已保存=%s，启动时=%s",
-  "server_chat_history.client.heads_hint": "沿用 Chat Heads 设置及现有玩家资料，不额外查询离线资料或皮肤。兼容开关修改后需重启。"
+  "server_chat_history.client.heads_hint": "沿用 Chat Heads 设置及现有玩家资料，不额外查询离线资料或皮肤。兼容开关修改后需重启。",
+  "server_chat_history.client.unavailable_entry": "[聊天历史] 此条记录无法显示。",
+  "server_chat_history.client.incomplete_history": "[聊天历史] 本次回放不完整，部分记录未收到或无法显示；已保留其余内容。",
+  "server_chat_history.client.conversion_warning": "部分跨版本历史已简化，原有互动或格式可能不可用。",
+  "migration_status": "历史迁移：{0} → {1}；{2} 条；简化 {3} 条；损失：{4}",
+  "migration_failed": "历史迁移已暂停，原文件保留：{0}"
 }

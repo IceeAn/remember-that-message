@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class PersistenceTest {
     @TempDir Path directory;
     private JsonHistoryStore store(Path path, List<Exception> errors) {
-        return new JsonHistoryStore(path, snapshot -> { }, errors::add);
+        return new JsonHistoryStore(path, new HistoryEncoding("1.21.1", io.github.iceean.serverchathistory.text.ComponentFormat.MC_1_21_1), snapshot -> { }, errors::add);
     }
 
     @Test void roundTripAndBackupRecoveryPreserveTimeAndSequence() throws Exception {
@@ -38,7 +38,7 @@ class PersistenceTest {
     @Test void bothInvalidCopiesArePreservedUntilExplicitClear() throws Exception {
         var path = directory.resolve("history.json");
         Files.writeString(path, "null");
-        Files.writeString(AtomicFiles.backup(path), "{\"version\":99}");
+        Files.writeString(AtomicFiles.backup(path), "invalid");
         var errors = new ArrayList<Exception>();
         var store = store(path, errors);
         assertEquals(HistorySnapshot.empty(), store.load());
@@ -46,7 +46,7 @@ class PersistenceTest {
         try (var files = Files.list(directory)) { assertEquals(2, files.count()); }
         store.reset(HistorySnapshot.empty());
         assertEquals(HistorySnapshot.empty(), store.load());
-        assertEquals(HistorySnapshot.empty(), JsonSupport.GSON.fromJson(Files.readString(AtomicFiles.backup(path)), HistorySnapshot.class));
+        assertEquals(HistorySnapshot.empty(), JsonSupport.GSON.fromJson(Files.readString(AtomicFiles.backup(path)), HistoryFile.class).snapshot());
         try (var files = Files.list(directory)) { assertEquals(2, files.count()); }
     }
 
@@ -56,7 +56,7 @@ class PersistenceTest {
         basic.save(Fixtures.snapshot("valid"));
         basic.save(Fixtures.snapshot("invalid"));
         var errors = new ArrayList<Exception>();
-        var checked = new JsonHistoryStore(path, snapshot -> {
+        var checked = new JsonHistoryStore(path, new HistoryEncoding("1.21.1", io.github.iceean.serverchathistory.text.ComponentFormat.MC_1_21_1), snapshot -> {
             if (snapshot.entries().get(0).message().renderedJson().contains("invalid")) throw new IllegalArgumentException("Invalid component");
         }, errors::add);
         assertEquals(Fixtures.snapshot("valid"), checked.load());

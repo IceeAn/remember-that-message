@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "io.github.iceean.serverchathistory.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "BackendSessionMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

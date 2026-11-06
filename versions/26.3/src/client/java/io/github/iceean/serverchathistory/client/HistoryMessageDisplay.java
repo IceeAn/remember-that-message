@@ -10,6 +10,10 @@ import net.minecraft.network.chat.Component;
 final class HistoryMessageDisplay {
     private HistoryMessageDisplay() { }
 
+    static boolean allowed(MessageKind kind, ChatAbilities abilities, boolean senderRestricted) {
+        return HistoryDisplay.allowed(kind, abilities.canReceiveSystemMessages(), abilities.canReceivePlayerMessages(), senderRestricted);
+    }
+
     static void display(HistoryProtocol.Item item, ChatAbilities abilities, boolean senderRestricted,
                         boolean skipHistoryNarration, Consumer<Runnable> adapter,
                         Consumer<Component> insert, Consumer<Component> narrate) {

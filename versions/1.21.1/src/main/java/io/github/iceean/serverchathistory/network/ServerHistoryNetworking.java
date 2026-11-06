@@ -30,6 +30,7 @@ public final class ServerHistoryNetworking {
         return ((CommonListenerAccessor) listener).serverChatHistory$connection();
     }
     public static void register() {
+        PortableServerNetworking.register();
         ServerConfigurationConnectionEvents.CONFIGURE.register((listener, server) -> {
             var connection = connection(listener);
             CONNECTIONS.remove(connection);
@@ -82,6 +83,8 @@ public final class ServerHistoryNetworking {
     }
 
     public static ReplayDelivery delivery(ServerPlayer player, ModConfig config) {
+        var portable = PortableServerNetworking.delivery(player, config);
+        if (portable != null) return portable;
         if (player.connection == null) return resolve(null, false, config.replayMode());
         var state = CONNECTIONS.get(connection(player.connection));
         if (state == null) return resolve(null, false, config.replayMode());

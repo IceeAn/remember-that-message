@@ -17,6 +17,7 @@ public final class ServerHistoryNetworking {
     private static final Map<Connection, Negotiation> CONNECTIONS = Collections.synchronizedMap(new WeakHashMap<>());
     private ServerHistoryNetworking() { }
     public static void register() {
+        PortableServerNetworking.register();
         ServerConfigurationConnectionEvents.CONFIGURE.register((listener, server) -> {
             var connection = listener.getPacketContext().orElseThrow(PacketContext.CONNECTION);
             CONNECTIONS.remove(connection);
@@ -41,6 +42,8 @@ public final class ServerHistoryNetworking {
                 CONNECTIONS.remove(listener.getPacketContext().orElseThrow(PacketContext.CONNECTION)));
     }
     public static ReplayDelivery delivery(ServerPlayer player, ModConfig config) {
+        var portable = PortableServerNetworking.delivery(player, config);
+        if (portable != null) return portable;
         if (player.connection == null) return resolve(null, false, config.replayMode());
         var state = CONNECTIONS.get(player.connection.getPacketContext().orElseThrow(PacketContext.CONNECTION));
         if (state == null) return resolve(null, false, config.replayMode());

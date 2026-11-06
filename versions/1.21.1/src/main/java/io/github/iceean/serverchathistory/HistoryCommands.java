@@ -41,11 +41,15 @@ public final class HistoryCommands {
                     history.configChanged();
                     reply(source, "config_reloaded");
                 })))
-                .then(literal("status").executes(context -> run(context.getSource(), (source, history) -> reply(source, "status",
+                .then(literal("status").executes(context -> run(context.getSource(), (source, history) -> { reply(source, "status",
                         history.size(), history.visibleSize(), history.config().active().historyLimit(),
                         text(source, history.config().active().replayMode() == io.github.iceean.serverchathistory.config.ModConfig.ReplayMode.AUTO ? "auto" : "system"),
                         text(source, history.config().hasError() ? "error" : "healthy"),
-                        text(source, history.storageError() ? "error" : "healthy"), history.pendingWrites()))))
+                        text(source, history.storageError() ? "error" : "healthy"), history.pendingWrites());
+                    var migration = history.migrationReport();
+                    if (migration != null) reply(source, "migration_status", migration.sourceMinecraft(), migration.targetMinecraft(), migration.records(), migration.degradedRecords(), String.join(", ", migration.losses()));
+                    if (history.migrationFailure() != null) reply(source, "migration_failed", history.migrationFailure());
+                })))
                 .then(literal("clear").executes(context -> run(context.getSource(), (source, history) -> {
                     reply(source, "clear_pending");
                     history.clear().whenComplete((ignored, failure) -> source.getServer().execute(() -> {
