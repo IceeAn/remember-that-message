@@ -104,10 +104,13 @@ class PortableSessionLifecycleTest {
         assertNull(PortableServerNetworking.session(second.player)); assertTrue(warned.isEmpty());
         assertTrue(failed.isEmpty());
     }
-    private ServerGamePacketListenerImpl ownedListener(MinecraftServer server) {
+    private ServerGamePacketListenerImpl ownedListener(MinecraftServer server) throws Exception {
         var listener = listener();
         var level = mock(ServerLevel.class); when(level.getServer()).thenReturn(server);
-        var player = mock(ServerPlayer.class); when(player.level()).thenReturn(level);
+        var player = new ObjenesisStd().newInstance(ServerPlayer.class);
+        // 某些版本将 level() 设为 final，设置测试实体字段以调用真实 getter。
+        var levelField = net.minecraft.world.entity.Entity.class.getDeclaredField("level");
+        levelField.setAccessible(true); levelField.set(player, level);
         player.connection = listener; listener.player = player;
         return listener;
     }

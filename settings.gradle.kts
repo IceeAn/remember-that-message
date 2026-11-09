@@ -8,9 +8,14 @@ pluginManagement {
 
 rootProject.name = "server-chat-history"
 
-include(":common", ":mc263", ":mc1211")
-project(":mc263").projectDir = file("versions/26.3")
-project(":mc1211").projectDir = file("versions/1.21.1")
-
-include(":mc1201")
-project(":mc1201").projectDir = file("versions/1.20.1")
+include(":common")
+val targets = file("versions").listFiles()!!.filter { it.resolve("target.properties").isFile }
+val selected = providers.gradleProperty("gameTargets").orNull?.split(",")?.map { it.trim() }?.toSet()
+require(selected == null || selected.isNotEmpty() && selected.all { version -> targets.any { it.name == version } }) {
+    "Unknown or empty gameTargets; available: ${targets.map { it.name }.sorted()}"
+}
+targets.filter { selected == null || it.name in selected }.sortedBy { it.name }.forEach {
+    val module = ":mc" + it.name.replace(".", "")
+    include(module)
+    project(module).projectDir = it
+}

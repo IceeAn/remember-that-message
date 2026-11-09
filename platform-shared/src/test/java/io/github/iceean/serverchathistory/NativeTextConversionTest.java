@@ -19,6 +19,15 @@ class NativeTextConversionTest {
     @BeforeAll static void bootstrap() { SharedConstants.tryDetectVersion(); Bootstrap.bootStrap(); }
     private final MessageCodec codec = new MessageCodec(RegistryAccess.EMPTY);
     @TempDir Path directory;
+    @Test void storedVersionMatchesTheActualGameRatherThanTheSharedSourceOrigin() throws Exception {
+        try (var stream = SharedConstants.class.getResourceAsStream("/version.json")) {
+            assertNotNull(stream);
+            var version = com.google.gson.JsonParser.parseReader(new java.io.InputStreamReader(stream,
+                    java.nio.charset.StandardCharsets.UTF_8)).getAsJsonObject().get("id").getAsString();
+            var file = HistoryFile.of(new HistorySnapshot(HistorySnapshot.VERSION, 1, List.of()), GameTextFormat.CURRENT);
+            assertEquals(version, file.minecraftVersion());
+        }
+    }
     private static String legacyClick(String action, String value) {
         var event = new JsonObject(); event.addProperty("action", action); event.addProperty("value", value);
         var component = new JsonObject(); component.addProperty("text", "可读正文"); component.addProperty("bold", true);

@@ -10,6 +10,7 @@ import net.minecraft.network.chat.ComponentSerialization;
 
 /** Convert on the server thread; the persistence worker only sees immutable JSON. */
 public final class MessageCodec {
+    public boolean isPublicChat(net.minecraft.network.chat.ChatType.Bound bound) { return bound.chatType().is(net.minecraft.network.chat.ChatType.CHAT); }
     private final HolderLookup.Provider registries;
     public MessageCodec(HolderLookup.Provider registries) { this.registries = registries; }
     public String encode(Component component) {
