@@ -1,0 +1,230 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Remember that Message</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#041423"/>
+      <stop offset=".62" stop-color="#07344b"/>
+      <stop offset="1" stop-color="#031c2e"/>
+    </linearGradient>
+    <radialGradient id="aura">
+      <stop stop-color="#21e8ef" stop-opacity=".38"/>
+      <stop offset=".48" stop-color="#13c9df" stop-opacity=".13"/>
+      <stop offset="1" stop-color="#13c9df" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="book-aura">
+      <stop stop-color="#d9ffff" stop-opacity=".8"/>
+      <stop offset=".24" stop-color="#46faff" stop-opacity=".37"/>
+      <stop offset="1" stop-color="#22dce7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1=".1" y1="0" x2=".8" y2="1">
+      <stop stop-color="#fff391"/>
+      <stop offset=".25" stop-color="#ffe651"/>
+      <stop offset=".62" stop-color="#ffc91f"/>
+      <stop offset="1" stop-color="#d98808"/>
+    </linearGradient>
+    <linearGradient id="gold-depth" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#e5a018"/>
+      <stop offset="1" stop-color="#87500b"/>
+    </linearGradient>
+    <linearGradient id="ivory" x1="0" y1="0" x2=".7" y2="1">
+      <stop stop-color="#fffdf3"/>
+      <stop offset=".6" stop-color="#fff7e8"/>
+      <stop offset="1" stop-color="#e8ded4"/>
+    </linearGradient>
+    <linearGradient id="clock-face" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff9dc"/>
+      <stop offset="1" stop-color="#f6d692"/>
+    </linearGradient>
+    <linearGradient id="bubble-blue" x1="0" y1="0" x2=".2" y2="1">
+      <stop stop-color="#359ab8"/>
+      <stop offset=".54" stop-color="#187697"/>
+      <stop offset="1" stop-color="#28bad0"/>
+    </linearGradient>
+    <linearGradient id="bubble-dim" x1="0" y1="0" x2=".5" y2="1">
+      <stop stop-color="#286581"/>
+      <stop offset="1" stop-color="#104761"/>
+    </linearGradient>
+    <linearGradient id="red-cover" x1="0" y1="0" x2=".5" y2="1">
+      <stop stop-color="#af5140"/>
+      <stop offset=".45" stop-color="#7d322d"/>
+      <stop offset="1" stop-color="#421c23"/>
+    </linearGradient>
+    <linearGradient id="red-front" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#73332e"/>
+      <stop offset="1" stop-color="#351820"/>
+    </linearGradient>
+    <linearGradient id="paper-left" x1="0" y1="0" x2=".6" y2="1">
+      <stop stop-color="#a5f5ef"/>
+      <stop offset=".28" stop-color="#fff9d9"/>
+      <stop offset="1" stop-color="#ffefc4"/>
+    </linearGradient>
+    <linearGradient id="paper-right" x1="1" y1="0" x2=".2" y2="1">
+      <stop stop-color="#b1fff9"/>
+      <stop offset=".3" stop-color="#fffbe2"/>
+      <stop offset="1" stop-color="#f6dcad"/>
+    </linearGradient>
+    <linearGradient id="page-edge" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#eec98f"/>
+      <stop offset="1" stop-color="#bc8353"/>
+    </linearGradient>
+    <linearGradient id="magic-page" x1="0" y1="0" x2=".5" y2="1">
+      <stop stop-color="#51c8de" stop-opacity=".68"/>
+      <stop offset=".48" stop-color="#7feafa" stop-opacity=".84"/>
+      <stop offset="1" stop-color="#e1fff5"/>
+    </linearGradient>
+    <linearGradient id="ribbon" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#24b6d2" stop-opacity=".12"/>
+      <stop offset=".4" stop-color="#4ae8f0" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#a5fffa" stop-opacity=".9"/>
+    </linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#577f36"/>
+      <stop offset="1" stop-color="#245d3e"/>
+    </linearGradient>
+    <linearGradient id="dirt" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#344b42"/>
+      <stop offset="1" stop-color="#182c31"/>
+    </linearGradient>
+    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#305c6e"/>
+      <stop offset="1" stop-color="#102c3d"/>
+    </linearGradient>
+    <path id="rewind-silhouette" d="M292 174 L470 35 L470 88.11 A419 419 0 0 1 931 505 A419 419 0 0 1 512 924 A419 419 0 0 1 99.366 577.759 C93.016 541.749 93.597 504.635 99.869 468.943 C106.141 433.251 118.048 398.995 133.747 367.327 C147.354 339.882 163.779 314.352 181.95 290.663 C198.724 268.797 216.976 248.481 236.228 229.228 C216.976 248.481 200.771 270.715 187.887 294.518 C173.929 320.305 163.863 347.908 157.293 375.897 C149.711 408.192 146.76 440.958 147.099 473.075 C147.439 505.192 151.014 536.662 156.484 567.687 A361 361 0 0 0 512 866 A361 361 0 0 0 873 505 A361 361 0 0 0 470 146.452 L470 249 Z"/>
+    <linearGradient id="rewind-gold" gradientUnits="userSpaceOnUse" x1="250" y1="35" x2="805" y2="910">
+      <stop offset="0" stop-color="#fff18c" stop-opacity="1"/>
+      <stop offset=".27" stop-color="#ffe354" stop-opacity="1"/>
+      <stop offset=".66" stop-color="#ffc825" stop-opacity="1"/>
+      <stop offset="1" stop-color="#df940d" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="rewind-depth" gradientUnits="userSpaceOnUse" x1="350" y1="95" x2="650" y2="928">
+      <stop offset="0" stop-color="#b77810" stop-opacity="1"/>
+      <stop offset=".55" stop-color="#ae6b0b" stop-opacity="1"/>
+      <stop offset="1" stop-color="#69400b" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="rewind-tail-fade" gradientUnits="userSpaceOnUse" x1="0" y1="530" x2="0" y2="228">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset=".38" stop-color="#f2f2f2" stop-opacity="1"/>
+      <stop offset=".72" stop-color="#969696" stop-opacity="1"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="1"/>
+    </linearGradient>
+    <!-- Fade now starts closer to the book: the transition shrinks to about half of its former visible range. -->
+    <linearGradient id="rewind-book-occlusion" gradientUnits="userSpaceOnUse" x1="0" y1="737" x2="0" y2="805">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="0.15" stop-color="#f1f1f1" stop-opacity="1"/>
+      <stop offset="0.35" stop-color="#b8b8b8" stop-opacity="1"/>
+      <stop offset="0.6" stop-color="#585858" stop-opacity="1"/>
+      <stop offset="0.8" stop-color="#1c1c1c" stop-opacity="1"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="1"/>
+    </linearGradient>
+    <mask id="rewind-visibility" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <rect width="1024" height="1024" fill="#fff"/>
+      <path d="M512 505 L-88 505 A600 600 0 0 1 118.365 52.174 Z" fill="url(#rewind-tail-fade)"/>
+      <rect x="0" y="660" width="1024" height="364" fill="url(#rewind-book-occlusion)"/>
+    </mask>
+    <clipPath id="rewind-clip" clipPathUnits="userSpaceOnUse">
+      <use href="#rewind-silhouette"/>
+    </clipPath>
+  </defs>
+  <g id="background">
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#sky)"/>
+    <ellipse cx="512" cy="486" rx="548" ry="514" fill="url(#aura)"/>
+    <path d="M40 104H104V70H167V94H212V136H40Z" fill="#1d5172" opacity=".50"/>
+    <path d="M824 110H873V76H952V102H995V150H807V128H824Z" fill="#1d5172" opacity=".44"/>
+    <path d="M0 217H27V191H73V227H123V253H0Z" fill="#164b69" opacity=".35"/>
+    <path d="M0 470H53V490H82V552H113V605H155V731H0Z" fill="#0a293d"/>
+    <path d="M1024 467H977V500H938V555H910V628H862V755H1024Z" fill="#0a293d"/>
+    <path d="M0 625H42V666H87V733H120V800H0Z" fill="#124049" opacity=".65"/>
+    <path d="M1024 616H984V661H946V707H914V785H1024Z" fill="#124049" opacity=".65"/>
+    <polygon points="0,820 69,803 69,850 113,840 113,961 0,1010" fill="url(#dirt)"/>
+    <polygon points="0,807 69,791 69,816 0,834" fill="url(#grass)"/>
+    <polygon points="69,850 113,840 113,865 69,880" fill="#2f6741"/>
+    <path d="M0 834L69 816V847L40 856V884H0Z" fill="#28533b"/>
+    <polygon points="1024,805 957,792 957,839 913,831 913,965 1024,1002" fill="url(#dirt)"/>
+    <polygon points="1024,791 957,778 957,805 1024,820" fill="url(#grass)"/>
+    <polygon points="957,839 913,831 913,858 957,871" fill="#285a3b"/>
+  </g>
+  <g id="rewind-arrow" mask="url(#rewind-visibility)">
+    <!-- One continuous arrow silhouette: head, neck, circular body and tapered tail. -->
+    <use href="#rewind-silhouette" fill="#3a250d" opacity=".48" transform="translate(0 14)"/>
+    <use href="#rewind-silhouette" fill="url(#rewind-depth)" transform="translate(0 10)"/>
+    <use id="rewind-face" href="#rewind-silhouette" fill="url(#rewind-gold)"/>
+    <g id="rewind-surface-details" clip-path="url(#rewind-clip)">
+      <path d="M303 173 L466 48 L466 93.110 L474 91.743 A415 415 0 0 1 927 505 A415 415 0 0 1 680.796 884.121" fill="none" stroke="#fff6b2" stroke-width="5" stroke-linejoin="miter" opacity=".72"/>
+      <path d="M305 175 L470 224 V249 Z" fill="#cc840b" opacity=".36"/>
+      <path d="M470 146.452 A361 361 0 0 1 873 505 A361 361 0 0 1 658.832 834.79" fill="none" stroke="#d79716" stroke-width="5" opacity=".38"/>
+      <g id="rewind-pixel-facets">
+        <rect x="707.169" y="162.761" width="23" height="23" fill="#eab72a" opacity=".60" transform="rotate(32 718.669 174.261)"/>
+        <rect x="846.993" y="315.444" width="25" height="25" fill="#fff2a1" opacity=".68" transform="rotate(63 859.493 327.944)"/>
+        <rect x="875.392" y="600.999" width="23" height="23" fill="#ffe271" opacity=".66" transform="rotate(106 886.892 612.499)"/>
+        <rect x="155.507" y="673.056" width="18" height="18" fill="#ffed90" opacity=".58" transform="rotate(243 164.507 682.056)"/>
+      </g>
+    </g>
+  </g>
+  <ellipse cx="510" cy="676" rx="283" ry="251" fill="url(#aura)" id="memory-ambient-glow"/>
+  <ellipse cx="512" cy="713" rx="169" ry="123" fill="url(#book-aura)" id="memory-bridge-glow"/>
+  <g id="chat-bubble" transform="translate(274 313) scale(1.02) skewY(0)" opacity="1">
+    <path d="M64 0H386V28H418V60H450V230H418V262H184L112 334H76V262H32V234H0V60H28V28H64Z" fill="#031827" transform="translate(0 13)" stroke="#031827" stroke-width="28"/>
+    <path d="M64 0H386V28H418V60H450V230H418V262H184L112 334H76V262H32V234H0V60H28V28H64Z" fill="url(#ivory)" stroke="#50f2f1" stroke-width="25" stroke-linejoin="miter"/>
+    <path d="M64 0H386V28H418V60H450V230H418V262H184L112 334H76V262H32V234H0V60H28V28H64Z" fill="url(#ivory)" stroke="#0b2b41" stroke-width="16"/>
+    <path d="M64 8H386V28H85V51H34V75H8V60H28V28H64Z" fill="#ffffff" opacity=".7"/>
+    <path d="M384 30H410V61H441V95H415V76H384Z" fill="#ddd5d0" opacity=".45"/>
+    <path d="M8 203H34V229H77V254H32V234H8Z" fill="#d9d3cd" opacity=".55"/>
+    <rect x="104" y="112" width="55" height="55" fill="#103950"/>
+    <rect x="197" y="112" width="55" height="55" fill="#103950"/>
+    <rect x="290" y="112" width="55" height="55" fill="#103950"/>
+  </g>
+  <g id="clock-badge" transform="translate(747 601) scale(0.93)">
+    <path d="M-40-100H40V-88H65V-65H88V-40H100V40H88V65H65V88H40V100H-40V88H-65V65H-88V40H-100V-40H-88V-65H-65V-88H-40Z" fill="#35210e" transform="translate(0 9)" stroke="#35210e" stroke-width="12"/>
+    <path d="M-40-100H40V-88H65V-65H88V-40H100V40H88V65H65V88H40V100H-40V88H-65V65H-88V40H-100V-40H-88V-65H-65V-88H-40Z" fill="url(#gold)" stroke="#6c3c0e" stroke-width="9"/>
+    <path d="M-40-100H40V-88H65V-65H88V-40H100V40H88V65H65V88H40V100H-40V88H-65V65H-88V40H-100V-40H-88V-65H-65V-88H-40Z" fill="#af6811" transform="scale(.79)"/>
+    <path d="M-40-100H40V-88H65V-65H88V-40H100V40H88V65H65V88H40V100H-40V88H-65V65H-88V40H-100V-40H-88V-65H-65V-88H-40Z" fill="url(#clock-face)" transform="scale(.71)"/>
+    <path d="M-40-97H40V-85H64V-66H53V-76H30V-84H-40Z" fill="#fff1a1"/>
+    <path d="M-88-38V40H-76V-38Z" fill="#ffe77a"/>
+    <path d="M40 88H-40V97H40V85H65V64H56V78H40Z" fill="#c77b0c"/>
+    <path d="M-12-43H9V6H44V27H-12Z" fill="#0b2a3b"/>
+  </g>
+  <g id="memory-particles" transform="translate(30.72 0) scale(0.94)">
+    <!-- Follow the ledger transform so the memory trail rises with the book. -->
+    <rect x="415.0" y="699.0" width="20" height="20" fill="#70f9f5" opacity="0.85"/>
+    <rect x="415.0" y="699.0" width="20" height="2" fill="#dcffff" opacity="0.85"/>
+    <rect x="459.5" y="716.5" width="31" height="31" fill="#70f9f5" opacity="1"/>
+    <rect x="459.5" y="716.5" width="31" height="2" fill="#dcffff" opacity="1"/>
+    <rect x="509.0" y="664.0" width="34" height="34" fill="#70f9f5" opacity="0.94"/>
+    <rect x="509.0" y="664.0" width="34" height="2" fill="#dcffff" opacity="0.94"/>
+    <rect x="556.0" y="712.0" width="20" height="20" fill="#70f9f5" opacity="0.9"/>
+    <rect x="556.0" y="712.0" width="20" height="2" fill="#dcffff" opacity="0.9"/>
+    <rect x="517.5" y="765.5" width="21" height="21" fill="#70f9f5" opacity="0.86"/>
+    <rect x="517.5" y="765.5" width="21" height="2" fill="#dcffff" opacity="0.86"/>
+    <rect x="374.5" y="739" width="11" height="11" fill="#70f9f5" opacity="0.45"/>
+    <rect x="595.0" y="748" width="12" height="12" fill="#70f9f5" opacity="0.45"/>
+  </g>
+  <g id="open-ledger" transform="translate(30.72 0) scale(0.94)">
+    <ellipse cx="512" cy="948" rx="332" ry="30" fill="#00111e" opacity=".5"/>
+    <path d="M177 895L252 779L408 807L512 873L616 807L772 779L847 895V944L512 979L177 944Z" fill="#041422" stroke="#041422" stroke-width="12"/>
+    <path d="M193 894L269 794L411 822L512 882L613 822L755 794L831 894L512 938Z" fill="url(#red-cover)"/>
+    <polygon points="193,894 512,938 512,966 193,931" fill="url(#red-front)"/>
+    <polygon points="512,938 831,894 831,931 512,966" fill="#542123"/>
+    <path d="M277 813L436 849L512 908V938L441 900L245 873V853Z" fill="url(#page-edge)"/>
+    <path d="M747 813L588 849L512 908V938L583 900L779 873V853Z" fill="url(#page-edge)"/>
+    <path d="M249 853L441 884L512 922M775 853L583 884L512 922" fill="none" stroke="#ffe2ac" stroke-width="5" opacity=".65"/>
+    <path d="M315 746L439 782L512 862V915L448 872L275 837Z" fill="url(#paper-left)" stroke="#d1fff5" stroke-width="2"/>
+    <path d="M709 746L585 782L512 862V915L576 872L749 837Z" fill="url(#paper-right)" stroke="#d1fff5" stroke-width="2"/>
+    <path d="M315 746L439 782L512 862V883L431 805L302 775Z" fill="#9dece8" opacity=".54"/>
+    <path d="M709 746L585 782L512 862V883L593 805L722 775Z" fill="#a4f5ed" opacity=".54"/>
+    <polygon points="333,775 420,800 435,817 326,789" fill="#79bfc0" opacity=".5"/>
+    <polygon points="691,775 604,800 589,817 698,789" fill="#7bbfc0" opacity=".5"/>
+    <path d="M315 746L439 782L512 862L585 782L709 746" fill="none" stroke="#b9fffa" stroke-width="6"/>
+    <path d="M512 866V914" fill="none" stroke="#f3fff0" stroke-width="7"/>
+    <polygon points="193,894 214,861 237,866 222,889 261,895 258,908 193,900" fill="url(#gold)"/>
+    <polygon points="193,900 258,908 258,939 193,932" fill="url(#gold-depth)"/>
+    <polygon points="831,894 810,861 787,866 802,889 763,895 766,908 831,900" fill="url(#gold)"/>
+    <polygon points="766,908 831,900 831,932 766,939" fill="url(#gold-depth)"/>
+    <path d="M465 924H559V968H465Z" fill="url(#gold-depth)" stroke="#8b550d" stroke-width="2"/>
+    <rect x="465" y="924" width="94" height="17" fill="url(#gold)"/>
+    <rect x="465" y="939" width="94" height="4" fill="#fff08f"/>
+  </g>
+  <g id="book-spine-glow" pointer-events="none">
+    <ellipse cx="512" cy="808" rx="45" ry="19" fill="url(#book-aura)" opacity=".62"/>
+  </g>
+</svg>

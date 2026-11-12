@@ -3,6 +3,7 @@
   "id": "remember_that_message",
   "version": "${version}",
   "name": "Remember that Message",
+  "icon": "assets/remember_that_message/icon.png",
   "description": "Persistent public chat and game-event history, replayed when players join.",
   "authors": [
     "IceeAn"
