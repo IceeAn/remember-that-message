@@ -1,26 +1,26 @@
-# Server Chat History
+# Remember that Message
 
 [English](README.md)
 
 适用于 **Minecraft Java 1.20～1.20.6、1.21～1.21.11 及 26.3** 的 Fabric 模组。玩家进入游戏时，补发当前世界最近的公开聊天记录。**服务端安装即可，原版客户端不需要安装本模组或 Fabric**。同一个 JAR 可选安装到客户端，提供个人偏好、设置界面及 Chat Patches、Chat Tools 历史时间联动。也支持单人世界及开放局域网的逻辑服务端。
 
-0.2.0 按 Minecraft 版本分别提供 JAR，使用 Fabric Loader 0.20.1。项目名称暂定，模组 ID 为 `server_chat_history`。
+0.2.0 按 Minecraft 版本分别提供 JAR，使用 Fabric Loader 0.20.1。模组 ID 为 `remember_that_message`。
 
 ## 安装
 
 1. 使用对应的 Java 版本和 Fabric Loader 0.20.1 创建 Fabric 服务端。
 2. 将下表中对应版本的 Fabric API 和模组 JAR 放入 `mods` 目录。
-3. 启动后自动生成 `config/server_chat_history.json`，历史文件保存在世界存档中。
+3. 启动后自动生成 `config/remember_that_message.json`，历史文件保存在世界存档中。
 
 | Minecraft | Java 运行版本 | Fabric API | 模组 JAR |
 | --- | --- | --- | --- |
-| 26.3 | 25 | 0.165.0+26.3 | `server-chat-history-0.2.0+mc26.3.jar` |
-| 1.21.1 | 21 | 0.116.17+1.21.1 | `server-chat-history-0.2.0+mc1.21.1.jar` |
-| 1.20.1 | 17 | 0.92.12+1.20.1 | `server-chat-history-0.2.0+mc1.20.1.jar` |
+| 26.3 | 25 | 0.165.0+26.3 | `remember-that-message-0.2.0+mc26.3.jar` |
+| 1.21.1 | 21 | 0.116.17+1.21.1 | `remember-that-message-0.2.0+mc1.21.1.jar` |
+| 1.20.1 | 17 | 0.92.12+1.20.1 | `remember-that-message-0.2.0+mc1.20.1.jar` |
 
 完整依赖与联动范围见 [20 个版本的支持矩阵](docs/COMPATIBILITY.zh-CN.md)，上表为三个示例。
 
-仅安装对应版本的 JAR。所有目标支持历史文件自动迁移和 Play 阶段的跨版本增强协议。跨版本连接仍需代理／协议转换层正常转发 `server_chat_history:bridge_v2` 通道及注册信息；本模组不负责转换游戏协议。Velocity＋Via 的真实联机与切服仍待验收，单元测试和无窗口检查不能代替这项验证。
+仅安装对应版本的 JAR。所有目标支持历史文件自动迁移和 Play 阶段的跨版本增强协议。跨版本连接仍需代理／协议转换层正常转发 `remember_that_message:bridge_v2` 通道及注册信息；本模组不负责转换游戏协议。Velocity＋Via 的真实联机与切服仍待验收，单元测试和无窗口检查不能代替这项验证。
 
 单人或局域网游戏由房主在自己的 Fabric 实例安装上述模组，访客可以使用相同 Minecraft 版本的原版客户端。本模组不会修改正版验证、安全配置或服务端 EULA。
 
@@ -68,14 +68,14 @@
 控制台、OP2 及以上玩家、单人或局域网世界主人可管理。主人无需开启作弊，普通局域网访客无权操作。具备对应命令权限的命令方块也可以执行。
 
 ```text
-/chathistory config
-/chathistory config get historyLimit
-/chathistory config set historyLimit 100
-/chathistory config set events.death false
-/chathistory config set replayMode system
-/chathistory reload
-/chathistory status
-/chathistory clear
+/rememberthatmessage config
+/rememberthatmessage config get historyLimit
+/rememberthatmessage config set historyLimit 100
+/rememberthatmessage config set events.death false
+/rememberthatmessage config set replayMode system
+/rememberthatmessage reload
+/rememberthatmessage status
+/rememberthatmessage clear
 ```
 
 命令修改经过校验、保存后立即生效。`reload` 加载手动修改的文件；`status` 显示保留条数、可见条数、有效发送模式、配置和存储状态，以及待写任务数。发生过损坏恢复后，本次运行的状态会持续保留恢复警告，详情见日志。
@@ -88,21 +88,21 @@
 
 在相同 Minecraft 版本的 Fabric 客户端安装对应 JAR 和 Fabric API。Chat Patches、Chat Tools、Chat Heads、Mod Menu 均为**可选依赖**，不会打包进本模组。未安装已支持的时间显示模组时个人偏好仍可用，不额外添加时间前缀或独立历史页面。
 
-使用 `/chathistoryclient` 打开设置界面，也可从 Mod Menu 进入；可用命令：
+使用 `/rememberthatmessageclient` 打开设置界面，也可从 Mod Menu 进入；可用命令：
 
 ```text
-/chathistoryclient status
-/chathistoryclient config get historyLimit
-/chathistoryclient config set historyLimit 100
-/chathistoryclient config set events.join false
-/chathistoryclient config set receiveHistory false
-/chathistoryclient config set messageTimeIntegration false
-/chathistoryclient config set chatHeadsIntegration false
-/chathistoryclient config set skipHistoryNarration false
-/chathistoryclient reload
+/rememberthatmessageclient status
+/rememberthatmessageclient config get historyLimit
+/rememberthatmessageclient config set historyLimit 100
+/rememberthatmessageclient config set events.join false
+/rememberthatmessageclient config set receiveHistory false
+/rememberthatmessageclient config set messageTimeIntegration false
+/rememberthatmessageclient config set chatHeadsIntegration false
+/rememberthatmessageclient config set skipHistoryNarration false
+/rememberthatmessageclient reload
 ```
 
-这些是无需服务端权限的本地命令。1.20／1.21 系列会阻止聊天文本通过 `RUN_COMMAND` 点击事件执行 `/chathistoryclient`；请手动输入，或使用需要自己确认提交的命令建议。`config/server_chat_history-client.json` 保存全局偏好，所有服务器共用：
+这些是无需服务端权限的本地命令。1.20／1.21 系列会阻止聊天文本通过 `RUN_COMMAND` 点击事件执行 `/rememberthatmessageclient`；请手动输入，或使用需要自己确认提交的命令建议。`config/remember_that_message-client.json` 保存全局偏好，所有服务器共用：
 
 | 设置 | 默认及作用 |
 | --- | --- |
@@ -117,7 +117,7 @@
 
 支持的客户端在 Play 阶段协商，最多等待约两秒；旧同版协议保留配置阶段兼容。版本不兼容、通道缺失或超时会回退服务端默认历史并显示警告，此时个人偏好（包括关闭接收）可能不生效。原版客户端无需协商。客户端 `status` 区分已保存偏好和当前连接实际采用的偏好。
 
-“旁白跳过历史”保存或重载后作用于后续收到的增强历史正文。关闭跳过时，成功插入的正文交给原版系统聊天旁白，仍遵守 Minecraft 的旁白开关；不会自动开启旁白、补读已显示历史或清除已经排队的语音。大量历史可能排队并延迟新消息播报，因此默认跳过。实时聊天、起止提示和系统消息回退仍按原版处理，后者无法可靠区分历史。设置页位于 `/chathistoryclient` 的“旁白”标签。
+“旁白跳过历史”保存或重载后作用于后续收到的增强历史正文。关闭跳过时，成功插入的正文交给原版系统聊天旁白，仍遵守 Minecraft 的旁白开关；不会自动开启旁白、补读已显示历史或清除已经排队的语音。大量历史可能排队并延迟新消息播报，因此默认跳过。实时聊天、起止提示和系统消息回退仍按原版处理，后者无法可靠区分历史。设置页位于 `/rememberthatmessageclient` 的“旁白”标签。
 
 增强回放在客户端额外遵守账号/启动器的玩家聊天接收限制：禁止玩家聊天时不显示或朗读玩家历史；事件按系统消息接收能力处理，发送者屏蔽及 Minecraft 支持的仅好友限制继续生效。1.20／1.21 系列遵循其原版 `ChatStatus` 规则，包括本地世界例外。
 
@@ -135,7 +135,7 @@ Chat Patches 的具体版本见 [支持矩阵](docs/COMPATIBILITY.zh-CN.md)。**
 
 新增目标为 **Chat Tools 2.4.5（支持矩阵中对应的 Fabric 发布包）**，沿用 `messageTimeIntegration` 开关。增强路径中，玩家聊天和事件的时间前缀、悬浮日期/时间以及复制功能所用的消息时间元数据使用服务端捕获时间。时间开关、格式及本地时区仍遵从 Chat Tools；本模组不会自行再加一层前缀，也不改变它的其他 HUD 功能。系统回退路径无法通过此适配提供历史时间。
 
-同装 Chat Patches 时，可选队列钩子会将历史时间保留到延迟插入时，独立于头像开关。两个时间模组均开启前缀时可能同时显示，请在它们各自设置中选择所需显示方式。`/chathistoryclient status` 分别报告适配状态；Chat Tools 缺失或不兼容时基础历史仍可用。关闭时间兼容并重启后，不应用它的时间及时间队列钩子；独立的头像队列钩子仍可能启用。
+同装 Chat Patches 时，可选队列钩子会将历史时间保留到延迟插入时，独立于头像开关。两个时间模组均开启前缀时可能同时显示，请在它们各自设置中选择所需显示方式。`/rememberthatmessageclient status` 分别报告适配状态；Chat Tools 缺失或不兼容时基础历史仍可用。关闭时间兼容并重启后，不应用它的时间及时间队列钩子；独立的头像队列钩子仍可能启用。
 
 自动测试及正式 JAR 无窗口检查已验证时间作用域、实际时间方法变换，以及与 Chat Patches、Chat Heads 同装的类加载。游戏内渲染、复制菜单、重复合并及真实联机兼容性仍须另行验收。
 
@@ -153,7 +153,7 @@ Chat Patches 的具体版本见 [支持矩阵](docs/COMPATIBILITY.zh-CN.md)。**
 
 ## 存储
 
-历史位于每个世界的 `data/server_chat_history/history.json`，另有一份 `.bak` 恢复快照。格式版本 3 在文件头单处保存 `minecraftVersion` 与 `componentEncoding`，每条仍只保存原生富文本、到达顺序、捕获时间、发送者身份及必要的过滤后正文。同编码加载不转换；跨编码才迁移。已知的无标记格式 2 可自动升级，无法识别的旧结构或未来格式保留原件并停止保存，日志及 `/chathistory status` 说明原因。公开聊天以可读形式保存，请据此管理存档备份。
+历史位于每个世界的 `data/remember_that_message/history.json`，另有一份 `.bak` 恢复快照。格式版本 3 在文件头单处保存 `minecraftVersion` 与 `componentEncoding`，每条仍只保存原生富文本、到达顺序、捕获时间、发送者身份及必要的过滤后正文。同编码加载不转换；跨编码才迁移。已知的无标记格式 2 可自动升级，无法识别的旧结构或未来格式保留原件并停止保存，日志及 `/rememberthatmessage status` 说明原因。公开聊天以可读形式保存，请据此管理存档备份。
 
 迁移先转换并验证全部记录，再写入新文件；保留最多一份固定的 `history.json.previous-version` 旧版本备份，正常 `.bak` 更新为新格式。普通文本、翻译、颜色、常见点击和文本悬浮尽量保留；物品／实体悬浮和无法映射的内容允许降级为可读文本或明确占位，损失条数及类别写入日志和状态命令。过滤后的正文单独转换，绝不用未过滤正文替代。迁移失败不会自动覆盖原件；如需回滚，停服后恢复 `.previous-version` 并使用匹配版本，避免运行中编辑。`clear` 会删除这份迁移备份。
 
@@ -175,7 +175,7 @@ Chat Patches 的具体版本见 [支持矩阵](docs/COMPATIBILITY.zh-CN.md)。**
 
 使用 Java 25 运行 Gradle，同时安装 Java 17 和 Java 21 工具链。Gradle 9.6.1 Wrapper 会校验分发包校验和。上述命令构建全部 20 个目标；`./gradlew -PgameTargets=1.20.4,1.21.11 build` 只配置和构建所选目标及公共模块。也可使用 `:mc263:build` 等任务，但不指定 `gameTargets` 时仍会配置全部目标。
 
-产物路径统一为 `versions/<版本>/build/libs/server-chat-history-0.2.0+mc<版本>.jar`。
+产物路径统一为 `versions/<版本>/build/libs/remember-that-message-0.2.0+mc<版本>.jar`。
 
 `-sources.jar` 仅供开发。根项目统一构建各模块，不代表最新 Minecraft 版本。
 
@@ -191,3 +191,9 @@ Chat Patches 的具体版本见 [支持矩阵](docs/COMPATIBILITY.zh-CN.md)。**
 内部按采集、不可变记录、容量管理、补发策略、原版/增强发送、可选客户端适配、配置及存储分层。验证范围见 [验证清单](docs/TESTING.zh-CN.md)。
 
 MIT 许可证。作者：IceeAn。
+
+## 短命令别名
+
+服务端主命令 `/rememberthatmessage` 的短别名为 `/rtm`；客户端主命令 `/rememberthatmessageclient` 的短别名为 `/rtmclient`，子命令及权限一致。两端配置各自提供 `shortCommandAliases`（默认 `true`）。修改后需重启对应服务端／Minecraft，配置重载不动态修改已注册命令。客户端常规设置页也可修改该开关。
+
+短名注册时已被占用则跳过并记录警告；其他模组之后注册同名命令仍可能冲突，可关闭短别名并使用完整名称。配置读取失败时不启用短别名；完整名称始终可用。

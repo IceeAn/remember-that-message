@@ -1,0 +1,8 @@
+{
+  "required": false,
+  "package": "dev.iceean.rememberthatmessage.client.mixin",
+  "plugin": "dev.iceean.rememberthatmessage.client.compat.ChatHeadsMixinPlugin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["ChatPatchesHeadsQueueMixin"],
+  "injectors": {"defaultRequire": 1}
+}

@@ -1,8 +1,0 @@
-{
-  "required": false,
-  "package": "io.github.iceean.serverchathistory.client.mixin",
-  "plugin": "io.github.iceean.serverchathistory.client.compat.ChatHeadsMixinPlugin",
-  "compatibilityLevel": "JAVA_25",
-  "client": ["ChatPatchesHeadsQueueMixin"],
-  "injectors": {"defaultRequire": 1}
-}

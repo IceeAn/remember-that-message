@@ -29,7 +29,7 @@
 
 表中第三方版本是具体检查对象，不表示任意未来版本自动兼容。1.21 同装最新 YACL 时，需使用支持 1.21 的较新 Fabric API（检查使用 0.116.17+1.21.1，包内声明支持 >=1.21- <1.21.2-），满足其传递依赖；基础模组仍仅要求表中的最低版本。
 
-每个目标输出 `versions/<版本>/build/libs/server-chat-history-0.2.0+mc<版本>.jar`。仅安装与游戏版本匹配的正式 JAR；`-sources.jar` 仅供开发。全部 1.20／1.21 产物重映射为 intermediary 命名。
+每个目标输出 `versions/<版本>/build/libs/remember-that-message-0.2.0+mc<版本>.jar`。仅安装与游戏版本匹配的正式 JAR；`-sources.jar` 仅供开发。全部 1.20／1.21 产物重映射为 intermediary 命名。
 
 源码按 API 能力显式组合，见 [适配目录说明](../platform-adapters/README.zh-CN.md)。1.20～1.20.4 使用原始通道，1.20.5 起使用类型化载荷。原生正文编码仍按实际游戏版本独立标识：共享 Java API 不代表注册表内容可互读；同版本不转换，跨版本通过公共格式转换，允许报告损失的正文降级。
 

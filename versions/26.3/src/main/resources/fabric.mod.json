@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "server_chat_history",
+  "id": "remember_that_message",
   "version": "${version}",
-  "name": "Server Chat History",
+  "name": "Remember that Message",
   "description": "Persistent public chat and game-event history, replayed when players join.",
   "authors": [
     "IceeAn"
@@ -11,30 +11,30 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "io.github.iceean.serverchathistory.ServerChatHistoryMod"
+      "dev.iceean.rememberthatmessage.RememberThatMessageMod"
     ],
     "client": [
-      "io.github.iceean.serverchathistory.client.HistoryClient"
+      "dev.iceean.rememberthatmessage.client.HistoryClient"
     ],
     "modmenu": [
-      "io.github.iceean.serverchathistory.client.ModMenuIntegration"
+      "dev.iceean.rememberthatmessage.client.ModMenuIntegration"
     ]
   },
   "mixins": [
     {
-      "config": "server_chat_history.client.mixins.json",
+      "config": "remember_that_message.client.mixins.json",
       "environment": "client"
     },
     {
-      "config": "server_chat_history.heads.mixins.json",
+      "config": "remember_that_message.heads.mixins.json",
       "environment": "client"
     },
     {
-      "config": "server_chat_history.chattools.mixins.json",
+      "config": "remember_that_message.chattools.mixins.json",
       "environment": "client"
     },
     {
-      "config": "server_chat_history.common.mixins.json",
+      "config": "remember_that_message.common.mixins.json",
       "environment": "client"
     }
   ],

@@ -33,7 +33,7 @@ jobs:
       - run: ./gradlew -PgameTargets=${{ matrix.minecraft }} clean build --console=plain "-Porg.gradle.java.installations.paths=${{ steps.java17.outputs.path }},${{ steps.java21.outputs.path }},${{ steps.java25.outputs.path }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: server-chat-history-${{ matrix.minecraft }}
+          name: remember-that-message-${{ matrix.minecraft }}
           path: |
             versions/${{ matrix.minecraft }}/build/libs/*.jar
           if-no-files-found: error

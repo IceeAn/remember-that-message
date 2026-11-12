@@ -25,13 +25,13 @@ subprojects {
         val menuVersion = target.getProperty("modMenu")
 
         evaluationDependsOn(":common")
-        extensions.configure<BasePluginExtension> { archivesName.set("server-chat-history") }
+        extensions.configure<BasePluginExtension> { archivesName.set("remember-that-message") }
         repositories { maven("https://maven.terraformersmc.com/releases") }
         val gameSources = extensions.getByType<SourceSetContainer>()
         val gameLoom = extensions.getByType<LoomGradleExtensionAPI>()
         gameLoom.apply {
             splitEnvironmentSourceSets()
-            mods.register("server_chat_history") {
+            mods.register("remember_that_message") {
                 sourceSet(gameSources["main"])
                 sourceSet(gameSources["client"])
                 modFiles.from(project(":common").tasks.named("jar"))
@@ -89,7 +89,7 @@ subprojects {
         val commonSources = project(":common").extensions.getByType<SourceSetContainer>()["main"]
         tasks.named<Jar>("jar") {
             from(commonSources.output)
-            from(rootProject.file("LICENSE")) { rename { "LICENSE_server_chat_history" } }
+            from(rootProject.file("LICENSE")) { rename { "LICENSE_remember_that_message" } }
         }
         tasks.named<Jar>("sourcesJar") { from(commonSources.allSource) }
         tasks.withType<Test>().configureEach {

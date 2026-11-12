@@ -29,7 +29,7 @@ Twenty separate targets cover release versions 1.20–1.20.6, 1.21–1.21.11 and
 
 Third-party versions identify specific validation candidates, not an automatic guarantee for future releases. On 1.21, the latest YACL requires a newer compatible Fabric API; checks use 0.116.17+1.21.1, whose metadata permits >=1.21- <1.21.2-. The base mod retains the lower minimum listed above.
 
-Each target produces `versions/<version>/build/libs/server-chat-history-0.2.0+mc<version>.jar`. Install only its matching release JAR; `-sources.jar` is for development. All 1.20/1.21 release artifacts are remapped to intermediary names.
+Each target produces `versions/<version>/build/libs/remember-that-message-0.2.0+mc<version>.jar`. Install only its matching release JAR; `-sources.jar` is for development. All 1.20/1.21 release artifacts are remapped to intermediary names.
 
 Sources are explicitly composed by API capability; see the [adapter guide](../platform-adapters/README.md). 1.20–1.20.4 use raw channels; 1.20.5 onward use typed payloads. Native text identifiers remain specific to actual game versions: shared Java APIs do not imply registry compatibility. Same-version data avoids conversion; different versions use portable conversion with reported readable-content degradation.
 

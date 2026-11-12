@@ -1,0 +1,8 @@
+{
+  "required": false,
+  "package": "dev.iceean.rememberthatmessage.client.mixin",
+  "plugin": "dev.iceean.rememberthatmessage.client.compat.ChatToolsMixinPlugin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["ChatToolsTimestampMixin", "ChatToolsMessageTimeMixin", "ChatPatchesToolsQueueMixin"],
+  "injectors": {"defaultRequire": 1}
+}

@@ -6,7 +6,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = "server-chat-history"
+rootProject.name = "remember-that-message"
 
 include(":common")
 val targets = file("versions").listFiles()!!.filter { it.resolve("target.properties").isFile }
