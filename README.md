@@ -4,7 +4,7 @@
 
 A Fabric mod for **Minecraft Java 1.20–1.20.6, 1.21–1.21.11 and 26.3** that replays a world's recent public chat when a player joins. Install it on the server; **vanilla clients do not need this mod or Fabric**. The same JAR optionally adds client preferences, a settings screen, and historical timestamps through Chat Patches or Chat Tools. It also supports the logical server in singleplayer and LAN worlds.
 
-Version 0.2.0 provides separate JARs for each Minecraft version, using Fabric Loader 0.20.1. The mod ID is `remember_that_message`.
+Version 0.3.0 provides separate JARs for each Minecraft version, using Fabric Loader 0.20.1. The mod ID is `remember_that_message`.
 
 ## Install
 
@@ -14,9 +14,9 @@ Version 0.2.0 provides separate JARs for each Minecraft version, using Fabric Lo
 
 | Minecraft | Java runtime | Fabric API | Mod JAR |
 | --- | --- | --- | --- |
-| 26.3 | 25 | 0.165.0+26.3 | `remember-that-message-0.2.0+mc26.3.jar` |
-| 1.21.1 | 21 | 0.116.17+1.21.1 | `remember-that-message-0.2.0+mc1.21.1.jar` |
-| 1.20.1 | 17 | 0.92.12+1.20.1 | `remember-that-message-0.2.0+mc1.20.1.jar` |
+| 26.3 | 25 | 0.165.0+26.3 | `remember-that-message-0.3.0+mc26.3.jar` |
+| 1.21.1 | 21 | 0.116.17+1.21.1 | `remember-that-message-0.3.0+mc1.21.1.jar` |
+| 1.20.1 | 17 | 0.92.12+1.20.1 | `remember-that-message-0.3.0+mc1.20.1.jar` |
 
 The table shows three examples; see the [complete 20-target matrix](docs/COMPATIBILITY.md) for dependencies and integration scope.
 
@@ -169,7 +169,7 @@ An invalid primary file is quarantined as `.corrupt-<uuid>` and the backup is tr
 
 Run Gradle with Java 25 and also install Java 17 and Java 21 toolchains. The Gradle 9.6.1 wrapper verifies its distribution checksum. This command builds all 20 targets. `./gradlew -PgameTargets=1.20.4,1.21.11 build` configures and builds only those targets plus common. Tasks such as `:mc263:build` remain available, but all targets are configured unless `gameTargets` is supplied.
 
-Artifacts use `versions/<version>/build/libs/remember-that-message-0.2.0+mc<version>.jar`.
+Artifacts use `versions/<version>/build/libs/remember-that-message-0.3.0+mc<version>.jar`.
 
 The `-sources.jar` files are for development. The root project aggregates builds; it does not represent the newest Minecraft version.
 

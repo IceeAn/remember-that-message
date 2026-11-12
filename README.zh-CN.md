@@ -4,7 +4,7 @@
 
 适用于 **Minecraft Java 1.20～1.20.6、1.21～1.21.11 及 26.3** 的 Fabric 模组。玩家进入游戏时，补发当前世界最近的公开聊天记录。**服务端安装即可，原版客户端不需要安装本模组或 Fabric**。同一个 JAR 可选安装到客户端，提供个人偏好、设置界面及 Chat Patches、Chat Tools 历史时间联动。也支持单人世界及开放局域网的逻辑服务端。
 
-0.2.0 按 Minecraft 版本分别提供 JAR，使用 Fabric Loader 0.20.1。模组 ID 为 `remember_that_message`。
+0.3.0 按 Minecraft 版本分别提供 JAR，使用 Fabric Loader 0.20.1。模组 ID 为 `remember_that_message`。
 
 ## 安装
 
@@ -14,9 +14,9 @@
 
 | Minecraft | Java 运行版本 | Fabric API | 模组 JAR |
 | --- | --- | --- | --- |
-| 26.3 | 25 | 0.165.0+26.3 | `remember-that-message-0.2.0+mc26.3.jar` |
-| 1.21.1 | 21 | 0.116.17+1.21.1 | `remember-that-message-0.2.0+mc1.21.1.jar` |
-| 1.20.1 | 17 | 0.92.12+1.20.1 | `remember-that-message-0.2.0+mc1.20.1.jar` |
+| 26.3 | 25 | 0.165.0+26.3 | `remember-that-message-0.3.0+mc26.3.jar` |
+| 1.21.1 | 21 | 0.116.17+1.21.1 | `remember-that-message-0.3.0+mc1.21.1.jar` |
+| 1.20.1 | 17 | 0.92.12+1.20.1 | `remember-that-message-0.3.0+mc1.20.1.jar` |
 
 完整依赖与联动范围见 [20 个版本的支持矩阵](docs/COMPATIBILITY.zh-CN.md)，上表为三个示例。
 
@@ -175,7 +175,7 @@ Chat Patches 的具体版本见 [支持矩阵](docs/COMPATIBILITY.zh-CN.md)。**
 
 使用 Java 25 运行 Gradle，同时安装 Java 17 和 Java 21 工具链。Gradle 9.6.1 Wrapper 会校验分发包校验和。上述命令构建全部 20 个目标；`./gradlew -PgameTargets=1.20.4,1.21.11 build` 只配置和构建所选目标及公共模块。也可使用 `:mc263:build` 等任务，但不指定 `gameTargets` 时仍会配置全部目标。
 
-产物路径统一为 `versions/<版本>/build/libs/remember-that-message-0.2.0+mc<版本>.jar`。
+产物路径统一为 `versions/<版本>/build/libs/remember-that-message-0.3.0+mc<版本>.jar`。
 
 `-sources.jar` 仅供开发。根项目统一构建各模块，不代表最新 Minecraft 版本。
 
