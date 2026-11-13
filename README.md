@@ -1,8 +1,39 @@
-# Remember that Message
+<h1 align="center">
+  <img src="docs/assets/remember-that-message-superellipse.svg" alt="Remember that Message mod icon" width="128" height="128"><br />
+  Remember that Message
+</h1>
 
-[简体中文](README.zh-CN.md)
+<p align="center">Recent conversations, ready when you join.</p>
 
-A Fabric mod for **Minecraft Java 1.20–1.20.6, 1.21–1.21.11 and 26.3** that replays a world's recent public chat when a player joins. Install it on the server; **vanilla clients do not need this mod or Fabric**. The same JAR optionally adds client preferences, a settings screen, and historical timestamps through Chat Patches or Chat Tools. It also supports the logical server in singleplayer and LAN worlds.
+<p align="center">
+  <strong>0.3.0</strong> · Fabric · Server-side installation · <a href="LICENSE">MIT</a>
+</p>
+
+<p align="center">
+  <strong>English</strong> · <a href="README.zh-CN.md">简体中文</a>
+</p>
+
+<p align="center">
+  <a href="#install">Install</a> ·
+  <a href="#configuration">Configure</a> ·
+  <a href="#administration">Commands</a> ·
+  <a href="#optional-client-installation">Client extras</a> ·
+  <a href="docs/COMPATIBILITY.md">Version support</a> ·
+  <a href="#build">Build</a>
+</p>
+
+---
+
+For **Minecraft Java 1.20–1.20.6, 1.21–1.21.11 and 26.3**. Install on a Fabric server to replay a world's recent public chat when players join. **Vanilla clients need neither this mod nor Fabric.**
+
+| Feature | What you get |
+| --- | --- |
+| History on join | Recent chat and enabled join, leave, death and advancement announcements, replayed oldest first. |
+| Per-world storage | **50 records** by default, with configurable capacity and history that persists across restarts. |
+| Optional client extras | The same JAR adds personal preferences, a settings screen and supported timestamp/head integrations. |
+| Flexible hosting | Dedicated servers, singleplayer worlds and the logical server of a LAN host. |
+
+> Replay shows recent records, not a personal unread list. First-time visitors and quick reconnects receive history too.
 
 Version 0.3.0 provides separate JARs for each Minecraft version, using Fabric Loader 0.20.1. The mod ID is `remember_that_message`.
 
@@ -84,9 +115,17 @@ Command changes are validated, saved, and applied immediately. `reload` loads ma
 
 Player notices use Simplified Chinese only for `zh_cn`, otherwise English. Console output and logs use English; no client translation resource pack is required.
 
+### Short command aliases
+
+`/rtm` aliases the server command `/rememberthatmessage`; `/rtmclient` aliases the client command `/rememberthatmessageclient`, with identical subcommands and permissions. Each side has its own `shortCommandAliases` setting (default `true`). Restart the server or Minecraft after changing it; configuration reload does not alter registered commands. The client General settings page also exposes this switch.
+
+An already occupied short name is skipped with a warning. Later registrations by other mods can still conflict; disable aliases and use the full names when needed. Invalid startup configuration disables aliases while keeping the full commands available.
+
 ## Optional client installation
 
 Install the matching JAR and Fabric API in a Fabric client of the same Minecraft version. Chat Patches, Chat Tools, Chat Heads and Mod Menu are **optional**, not bundled. Without a supported timestamp mod, all client preferences work; this mod adds no timestamp prefix or separate history panel.
+
+### Settings and commands
 
 Use `/rememberthatmessageclient` for the settings screen (also available through Mod Menu), or:
 
@@ -113,9 +152,13 @@ These are local commands requiring no server permission. In 1.21.1/1.20.1, chat 
 | `chatHeadsIntegration` | `true`; lets Chat Heads process player history using available player information. Independent of time integration; requires a **client restart**. |
 | `skipHistoryNarration` | `true`; skips enhanced history entries in narration without enabling or disabling Minecraft's narrator. |
 
+### When preferences apply
+
 Receiving preference changes apply on the **next connection**. They do not remove, reinsert or rewrite existing chat or Chat Patches logs. The server filters by its own policy, recipient visibility and personal event preferences **before** selecting the latest N eligible records, then sends them oldest first. Preferences can only narrow retained server history.
 
 A supporting client negotiates during Play, with an approximately two-second timeout; the old same-version configuration path remains available. Incompatible, incomplete or timed-out negotiation falls back to server-default history and displays a warning; personal preferences, including opt-out, may not apply in that case. Vanilla clients need no negotiation. Client `status` distinguishes saved preferences from those accepted for this connection.
+
+### Narration and reception restrictions
 
 “Narrator skips history” applies to subsequently received enhanced entries after saving or reloading. When disabled, successfully inserted entries use vanilla system-chat narration, which still respects Minecraft's narrator setting. It does not enable the narrator, reread existing history or clear queued speech. Large histories can queue up and delay live-message narration, so skipping is enabled by default. Live chat, batch notices and system-message fallback retain vanilla behavior; fallback messages cannot reliably be identified as history. Find the setting on the Narrator tab of `/rememberthatmessageclient`.
 
@@ -155,11 +198,21 @@ Vanilla retains at most 100 chat messages and 100 rendered lines. Wrapping and b
 
 Each world stores `data/remember_that_message/history.json` plus a `.bak` recovery snapshot. Format 3 records `minecraftVersion` and `componentEncoding` once in the header. Records retain native JSON, capture time, order, sender identity and the separate filtered alternative. Matching encodings do not convert; supported different encodings migrate automatically. Known unmarked format-2 data can upgrade; ambiguous structures and future formats are preserved with writes blocked and an explicit error.
 
+### Saving and recovery
+
 Ordinary records are combined into one immutable persistence snapshot at the end of each changed server tick. Unchanged snapshots are reused; a single background writer additionally coalesces pending ordinary writes. Configuration changes and clearing retain their explicit persistence boundaries, and normal shutdown waits for the final snapshot, including records received after the last tick. Temporary files and atomic replacement protect updates where the filesystem supports atomic moves. A crash or I/O failure can lose changes that have not been persisted; this is not a transactional chat archive.
 
 Replay lazily caches decoded text components per world and shares them across recipients. Eviction, shrinking, clearing, and shutdown release obsolete cache entries. Visibility and text filtering remain recipient-specific. Replay still sends all retained, enabled records in one tick after negotiation or timeout; this optimization does not introduce pagination or spread replay across ticks.
 
 An invalid primary file is quarantined as `.corrupt-<uuid>` and the backup is tried. If neither copy is usable, the mod starts empty and logs the error while preserving damaged files. If preservation itself fails, writes refuse to overwrite those files; repair permissions and restart, or explicitly clear. Storage failures leave recording active in memory and are retried on subsequent changes and shutdown.
+
+### Cross-version history
+
+Migration validates the entire result before replacing the file. At most one old-version copy is kept as `history.json.previous-version`; the ordinary `.bak` contains the new format after success. Unmappable content may degrade to readable text or an explicit placeholder. Item/entity hover data becomes text; unsupported interactions/styles are reported, not silently claimed as preserved. Logs and `/rememberthatmessage status` report source, destination, record count and losses. Filtered content is converted independently and never replaced by its unfiltered counterpart. To roll back, stop the server and restore the previous-version copy with the matching build. Explicit `clear` also removes this migration backup.
+
+Portable JSON is generated lazily only for cross-version recipients, cached separately for original and filtered content, shared across recipients and released on eviction/clear/shutdown. It is not stored twice on disk. Wire text is limited to 256 KiB UTF-8 and conversion nesting to 64; oversize content is rejected, not silently truncated. Clients show one simplification warning. The old configuration-phase protocol remains a same-version fallback on 1.20.5 and later targets; cross-version replay requires the new Play protocol on both ends. Build only 1.20.1 with `./gradlew -PgameTargets=1.20.1 build`.
+
+New Play replay replaces an individual conversion or encoding failure with a short `[Chat History] This record could not be displayed.` placeholder, retaining its order and time while continuing subsequent records. Stored history is unchanged. Client-side text parsing failures also use placeholders. Original reception restrictions still apply, but timestamp/head integrations receive a system presentation without player attribution. On the closing boundary, updated clients check record counts and unavailable entries, retain displayed content and warn once if replay is incomplete; they do not automatically retry. Older clients can display the placeholder's English fallback. Actual network-send failures still abort the batch.
 
 ## Build
 
@@ -173,6 +226,8 @@ Artifacts use `versions/<version>/build/libs/remember-that-message-0.3.0+mc<vers
 
 The `-sources.jar` files are for development. The root project aggregates builds; it does not represent the newest Minecraft version.
 
+### Project structure
+
 - `common/`: independently compiled Java 17 business code, configuration, persistence, protocol contracts and language resources. It has no Minecraft or Fabric dependency. Run `./gradlew :common:test --tests '*PersistenceTest'` for a focused persistence check.
 - `platform-shared/src/`: explicit shared game adapters and integration tests, compiled against each target's dependencies. These sources may depend on Minecraft/Fabric; neither version inherits the other's files.
 - `platform-adapters/`: thin implementations and tests grouped by actual API differences; see the [adapter guide](platform-adapters/README.md).
@@ -184,18 +239,6 @@ HTML test reports are under each module's `build/reports/tests/test/`. GitHub Ac
 
 Internals separate capture, immutable records, bounded history, replay policy, vanilla/enhanced transport, optional client integration, configuration, and persistence. See [docs/TESTING.md](docs/TESTING.md) for validation scope.
 
-MIT license. Author: IceeAn.
+## License
 
-## Cross-version history
-
-Migration validates the entire result before replacing the file. At most one old-version copy is kept as `history.json.previous-version`; the ordinary `.bak` contains the new format after success. Unmappable content may degrade to readable text or an explicit placeholder. Item/entity hover data becomes text; unsupported interactions/styles are reported, not silently claimed as preserved. Logs and `/rememberthatmessage status` report source, destination, record count and losses. Filtered content is converted independently and never replaced by its unfiltered counterpart. To roll back, stop the server and restore the previous-version copy with the matching build. Explicit `clear` also removes this migration backup.
-
-Portable JSON is generated lazily only for cross-version recipients, cached separately for original and filtered content, shared across recipients and released on eviction/clear/shutdown. It is not stored twice on disk. Wire text is limited to 256 KiB UTF-8 and conversion nesting to 64; oversize content is rejected, not silently truncated. Clients show one simplification warning. The old configuration-phase protocol remains a same-version fallback on 1.20.5 and later targets; cross-version replay requires the new Play protocol on both ends. Build only 1.20.1 with `./gradlew -PgameTargets=1.20.1 build`.
-
-New Play replay replaces an individual conversion or encoding failure with a short `[Chat History] This record could not be displayed.` placeholder, retaining its order and time while continuing subsequent records. Stored history is unchanged. Client-side text parsing failures also use placeholders. Original reception restrictions still apply, but timestamp/head integrations receive a system presentation without player attribution. On the closing boundary, updated clients check record counts and unavailable entries, retain displayed content and warn once if replay is incomplete; they do not automatically retry. Older clients can display the placeholder's English fallback. Actual network-send failures still abort the batch.
-
-## Short command aliases
-
-`/rtm` aliases the server command `/rememberthatmessage`; `/rtmclient` aliases the client command `/rememberthatmessageclient`, with identical subcommands and permissions. Each side has its own `shortCommandAliases` setting (default `true`). Restart the server or Minecraft after changing it; configuration reload does not alter registered commands. The client General settings page also exposes this switch.
-
-An already occupied short name is skipped with a warning. Later registrations by other mods can still conflict; disable aliases and use the full names when needed. Invalid startup configuration disables aliases while keeping the full commands available.
+[MIT](LICENSE) · Created by IceeAn.
