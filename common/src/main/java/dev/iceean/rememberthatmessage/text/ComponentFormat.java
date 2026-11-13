@@ -21,6 +21,10 @@ public enum ComponentFormat {
     MC_1_21_9("1.21.9", true),
     MC_1_21_10("1.21.10", true),
     MC_1_21_11("1.21.11", true),
+    MC_26_1("26.1", true),
+    MC_26_1_1("26.1.1", true),
+    MC_26_1_2("26.1.2", true),
+    MC_26_2("26.2", true),
     MC_26_3("26.3", true),
     PORTABLE_V1(null, false);
 

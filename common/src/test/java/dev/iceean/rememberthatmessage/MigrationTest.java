@@ -30,8 +30,8 @@ class MigrationTest {
         assertTrue(original.contains("minecraftVersion")); assertTrue(original.contains("MC_26_3"));
     }
     @Test void allNativePairsMigrateAndKeepOnlyOneOldVersionCopy() throws Exception {
-        for (var source : List.of(ComponentFormat.MC_1_20_1, ComponentFormat.MC_1_21_1, ComponentFormat.MC_26_3)) {
-            for (var target : List.of(ComponentFormat.MC_1_20_1, ComponentFormat.MC_1_21_1, ComponentFormat.MC_26_3)) {
+        for (var source : Arrays.stream(ComponentFormat.values()).filter(f -> f != ComponentFormat.PORTABLE_V1).toList()) {
+            for (var target : Arrays.stream(ComponentFormat.values()).filter(f -> f != ComponentFormat.PORTABLE_V1).toList()) {
                 if (source == target) continue;
                 var value = snapshot("\"secret\"", "\"###\"");
                 store(source).save(value); String original = Files.readString(file());

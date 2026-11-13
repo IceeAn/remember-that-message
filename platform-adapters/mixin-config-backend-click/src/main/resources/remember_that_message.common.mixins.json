@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "dev.iceean.rememberthatmessage.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "BackendSessionMixin",
+    "ClientCommandClickMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

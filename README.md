@@ -24,7 +24,7 @@
 
 ---
 
-For **Minecraft Java 1.20–1.20.6, 1.21–1.21.11 and 26.3**. Install on a Fabric server to replay a world's recent public chat when players join. **Vanilla clients need neither this mod nor Fabric.**
+For **Minecraft Java 1.20–1.20.6, 1.21–1.21.11 and 26.1–26.3**. Install on a Fabric server to replay a world's recent public chat when players join. **Vanilla clients need neither this mod nor Fabric.**
 
 | Feature | What you get |
 | --- | --- |
@@ -168,7 +168,7 @@ When migrating between Minecraft versions, the mod attempts to convert the recor
 ./gradlew clean build
 ```
 
-Run Gradle with Java 25 and also install Java 17 and Java 21 toolchains. The Gradle 9.6.1 wrapper verifies its distribution checksum. This command builds all 20 targets. `./gradlew -PgameTargets=1.20.4,1.21.11 build` configures and builds only those targets plus common. Tasks such as `:mc263:build` remain available, but all targets are configured unless `gameTargets` is supplied.
+Run Gradle with Java 25 and also install Java 17 and Java 21 toolchains. The Gradle 9.6.1 wrapper verifies its distribution checksum. This command builds all 24 targets. `./gradlew -PgameTargets=1.20.4,1.21.11 build` configures and builds only those targets plus common. Tasks such as `:mc263:build` remain available, but all targets are configured unless `gameTargets` is supplied.
 
 Artifacts use `versions/<version>/build/libs/remember-that-message-0.3.0+mc<version>.jar`.
 

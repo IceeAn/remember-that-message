@@ -1,6 +1,6 @@
 # Version and integration matrix
 
-Twenty separate targets cover release versions 1.20–1.20.6, 1.21–1.21.11 and 26.3, excluding snapshots and prereleases. Matching vanilla clients can join a server with the mod installed. Dependencies and source selection are declared in `versions/<version>/target.properties`.
+Twenty separate targets cover release versions 1.20–1.20.6, 1.21–1.21.11 and 26.1–26.3, excluding snapshots and prereleases. Matching vanilla clients can join a server with the mod installed. Dependencies and source selection are declared in `versions/<version>/target.properties`.
 
 | Minecraft | Java | Fabric API | Chat Patches | Chat Tools | Chat Heads |
 | --- | --- | --- | --- | --- | --- |
@@ -23,6 +23,10 @@ Twenty separate targets cover release versions 1.20–1.20.6, 1.21–1.21.11 and
 | 1.21.9 | 21 | 0.134.1+1.21.9 | — | 2.4.5 | 1.3.2 |
 | 1.21.10 | 21 | 0.138.4+1.21.10 | — | 2.4.5 | 1.3.2 |
 | 1.21.11 | 21 | 0.141.6+1.21.11 | 8.0.0+1.21.11-fabric | 2.4.5 | 1.3.2 |
+| 26.1 | 25 | 0.155.3+26.1.2 | 8.0.0+26.1.2-fabric | 2.4.5 | 1.3.2 |
+| 26.1.1 | 25 | 0.155.3+26.1.2 | 8.0.0+26.1.2-fabric | 2.4.5 | 1.3.2 |
+| 26.1.2 | 25 | 0.155.3+26.1.2 | 8.0.0+26.1.2-fabric | 2.4.5 | 1.3.2 |
+| 26.2 | 25 | 0.161.0+26.2 | 8.0.0+26.2-fabric | 2.4.5 | 1.3.2 |
 | 26.3 | 25 | 0.165.0+26.3 | 8.0.0+26.3-fabric | 2.4.5+26.3 | 1.3.2-fabric-26.3 |
 
 `—` means Chat Patches integration is not provided for that target. Its alpha releases lack the queue interface required by the existing adapter. Structural rejection and status reporting remain; basic history stays available. Time/head integrations combined with those Chat Patches releases are also outside the supported scope. Chat Tools alone, Chat Heads alone and their combination are checked separately.

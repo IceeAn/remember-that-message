@@ -24,7 +24,7 @@
 
 ---
 
-适用于 **Minecraft Java 1.20～1.20.6、1.21～1.21.11 及 26.3**。在 Fabric 服务端安装后，玩家进入游戏时会收到当前世界最近的公开聊天记录。**原版客户端不需要安装本模组或 Fabric。**
+适用于 **Minecraft Java 1.20～1.20.6、1.21～1.21.11 及 26.1～26.3**。在 Fabric 服务端安装后，玩家进入游戏时会收到当前世界最近的公开聊天记录。**原版客户端不需要安装本模组或 Fabric。**
 
 | 功能 | 使用体验 |
 | --- | --- |
@@ -168,7 +168,7 @@ Chat Patches、Chat Tools、Chat Heads 的具体联动版本及验证范围见 [
 ./gradlew clean build
 ```
 
-使用 Java 25 运行 Gradle，同时安装 Java 17 和 Java 21 工具链。Gradle 9.6.1 Wrapper 会校验分发包校验和。上述命令构建全部 20 个目标；`./gradlew -PgameTargets=1.20.4,1.21.11 build` 只配置和构建所选目标及公共模块。也可使用 `:mc263:build` 等任务，但不指定 `gameTargets` 时仍会配置全部目标。
+使用 Java 25 运行 Gradle，同时安装 Java 17 和 Java 21 工具链。Gradle 9.6.1 Wrapper 会校验分发包校验和。上述命令构建全部 24 个目标；`./gradlew -PgameTargets=1.20.4,1.21.11 build` 只配置和构建所选目标及公共模块。也可使用 `:mc263:build` 等任务，但不指定 `gameTargets` 时仍会配置全部目标。
 
 产物路径统一为 `versions/<版本>/build/libs/remember-that-message-0.3.0+mc<版本>.jar`。
 
