@@ -3,7 +3,7 @@
   Remember that Message
 </h1>
 
-<p align="center">Recent conversations, ready when you join.</p>
+<p align="center">A server-side Minecraft mod that records chat messages, even when you're offline.</p>
 
 <p align="center">
   <strong>0.3.0</strong> · Fabric · Server-side installation · <a href="LICENSE">MIT</a>
@@ -19,7 +19,7 @@
   <a href="#administration">Commands</a> ·
   <a href="#optional-client-installation">Client extras</a> ·
   <a href="docs/COMPATIBILITY.md">Version support</a> ·
-  <a href="#build">Build</a>
+  <a href="#development-and-build">Build</a>
 </p>
 
 ---
@@ -33,41 +33,30 @@ For **Minecraft Java 1.20–1.20.6, 1.21–1.21.11 and 26.3**. Install on a Fabr
 | Optional client extras | The same JAR adds personal preferences, a settings screen and supported timestamp/head integrations. |
 | Flexible hosting | Dedicated servers, singleplayer worlds and the logical server of a LAN host. |
 
-> Replay shows recent records, not a personal unread list. First-time visitors and quick reconnects receive history too.
-
-Version 0.3.0 provides separate JARs for each Minecraft version, using Fabric Loader 0.20.1. The mod ID is `remember_that_message`.
+> First-time visitors receive history too.
 
 ## Install
 
-1. Set up a Fabric server with the matching Java version and Fabric Loader 0.20.1.
-2. Put the matching Fabric API and mod JAR from the table below in its `mods` directory.
-3. Start the server. The mod creates `config/remember_that_message.json` and a history file inside the world.
+1. Put the Fabric API and mod JAR matching your Minecraft version in the server's `mods` directory.
+2. Restart the server.
 
-| Minecraft | Java runtime | Fabric API | Mod JAR |
-| --- | --- | --- | --- |
-| 26.3 | 25 | 0.165.0+26.3 | `remember-that-message-0.3.0+mc26.3.jar` |
-| 1.21.1 | 21 | 0.116.17+1.21.1 | `remember-that-message-0.3.0+mc1.21.1.jar` |
-| 1.20.1 | 17 | 0.92.12+1.20.1 | `remember-that-message-0.3.0+mc1.20.1.jar` |
+The configuration file is located at `config/remember_that_message.json`; history files are stored in the world save.
 
-The table shows three examples; see the [complete 20-target matrix](docs/COMPATIBILITY.md) for dependencies and integration scope.
+See the [version support matrix](docs/COMPATIBILITY.md) for dependency versions and mod integration scope.
 
-Install only the matching JAR. All targets support automatic history migration and a stable Play protocol. Cross-version connections require a proxy/protocol translator forwarding `remember_that_message:bridge_v2` and its registration; this mod does not translate Minecraft itself. Live Velocity/Via compatibility remains unverified.
-
-For singleplayer or LAN hosting, install those mods in the host's Fabric game instance. Guests may use vanilla clients of the same Minecraft version. This mod does not change authentication, secure profile enforcement, or the server EULA.
+For singleplayer or LAN hosting, the host can install these mods in their Fabric game instance.
 
 ## What is recorded
 
-The default capacity is **50 records per world**, shared across dimensions. Public player chat and public join, leave, death, and advancement announcements are recorded. A multi-line message counts as one record. Each successful join receives the retained, enabled records in arrival order, including that join's announcement if enabled and broadcast. Candidates freeze at the end of the first join tick. Replay runs once after Play negotiation or an approximately two-second timeout; live messages during the wait are not replayed again and world entry is not blocked.
+The default capacity is **50 records per world**.
 
-Private messages, team chat, restricted-audience deaths, command output, `/say`, `/me`, `/tellraw`, and external chat bridges are outside the initial scope. Capture observes Fabric's allowed public broadcast events and standard vanilla message types. Mods that replace those paths or forge vanilla event components may require explicit integration.
-
-Rich text, names, colors, translations, and hover information are preserved. Only the batch has start/end notices; individual records receive no extra prefix or timestamp. Filtering and the recipient's chat visibility settings are respected. Replay and mod notices are never recorded again.
-
-This version sends recent history to **every joining player**, including first-time visitors and quick reconnects. It does not track which messages an individual missed, and has no player query or pagination command.
+Public player chat and public join, leave, death and advancement announcements are recorded. Private messages, team chat, restricted-audience deaths, command output, `/say`, `/me`, `/tellraw` and external chat bridges are **not** recorded.
 
 ## Configuration
 
-The config belongs to the game/server installation, so singleplayer saves in the same installation share it. Histories themselves remain world-specific.
+The configuration file is `config/remember_that_message.json`, located in the game or server installation.
+
+Singleplayer saves in the same installation share this configuration, but their message histories remain separate.
 
 ```json
 {
@@ -80,141 +69,100 @@ The config belongs to the game/server installation, so singleplayer saves in the
   },
   "replayMode": "auto",
   "showEmptyHistory": true,
-  "showConfigErrors": true
+  "showConfigErrors": true,
+  "shortCommandAliases": true
 }
 ```
 
 | Key | Meaning |
 | --- | --- |
-| `historyLimit` | Positive 64-bit integer. No additional fixed cap or upfront allocation; actual memory, disk, and client limits still apply. |
-| `events.join`, `events.leave`, `events.death`, `events.advancement` | Capture and display that event category. Disabled saved events remain in the capacity budget and reappear if reenabled before eviction. |
-| `replayMode` | `auto` uses the enhanced history protocol for compatible clients and vanilla system messages otherwise. `system` always uses system messages; successfully negotiated client preferences still apply. |
-| `showEmptyHistory` | Show a notice when no eligible records exist. |
-| `showConfigErrors` | Append a red config-error notice on join, independently of the empty-history notice. |
+| `historyLimit` | Maximum number of history records to retain and send; a positive 64-bit integer. |
+| `events.join`, `events.leave`, `events.death`, `events.advancement` | Whether to record and display join, leave, death and advancement messages. |
+| `replayMode` | `auto` uses the enhanced protocol for clients with the mod installed and vanilla system messages otherwise; `system` forces system messages. |
+| `showEmptyHistory` | Whether to show a notice when no eligible records exist. |
+| `showConfigErrors` | Whether to report configuration errors during history replay on join. |
+| `shortCommandAliases` | Whether to enable the server's `/rtm` alias. Changes take effect after a **server restart**. |
 
-Shrinking capacity immediately evicts older records. Growing it cannot recover evicted data. Missing fields use defaults; unknown fields and invalid values are rejected. On invalid startup config, defaults are used and the file is preserved. A failed reload retains the last valid effective config. A successful load or command save clears the config-error state.
+Shrinking capacity immediately evicts older records. Growing it cannot recover evicted data.
 
 ## Administration
 
 Console, OP level 2 or higher, and the singleplayer/LAN world owner can administer history. The owner does not need cheats enabled. Ordinary LAN guests cannot. Permission-backed command blocks can also execute the commands.
 
+The examples below use the `/rtm` alias. If aliases are disabled or the name conflicts with another command, use the full `/rememberthatmessage` command instead.
+
 ```text
-/rememberthatmessage config
-/rememberthatmessage config get historyLimit
-/rememberthatmessage config set historyLimit 100
-/rememberthatmessage config set events.death false
-/rememberthatmessage config set replayMode system
-/rememberthatmessage reload
-/rememberthatmessage status
-/rememberthatmessage clear
+/rtm config
+/rtm config get historyLimit
+/rtm config set historyLimit 100
+/rtm config set events.death false
+/rtm config set replayMode system
+/rtm reload
+/rtm status
+/rtm clear
 ```
 
-Command changes are validated, saved, and applied immediately. `reload` loads manual file edits. `status` reports retained/visible counts, effective replay mode, configuration and storage health, and pending writes. A recovery warning remains visible for the session after a damaged file is recovered; consult the log.
+Command changes are applied immediately, except for `shortCommandAliases`, which requires a server restart. `reload` loads manual file edits. `status` reports retained/visible counts, effective replay mode, configuration and storage health, and pending writes. A recovery warning remains visible for the session after a damaged file is recovered; consult the log.
 
-`clear` empties the current world's memory and removes its recovery copies, including quarantined corrupt history. It cancels queued old snapshots, waits behind any in-flight write, and reports success only after both the main file and backup are reset. A failed clear is reported explicitly and retried on the next save or shutdown. Records arriving after the clear are retained normally. External backups are unaffected.
-
-Player notices use Simplified Chinese only for `zh_cn`, otherwise English. Console output and logs use English; no client translation resource pack is required.
-
-### Short command aliases
-
-`/rtm` aliases the server command `/rememberthatmessage`; `/rtmclient` aliases the client command `/rememberthatmessageclient`, with identical subcommands and permissions. Each side has its own `shortCommandAliases` setting (default `true`). Restart the server or Minecraft after changing it; configuration reload does not alter registered commands. The client General settings page also exposes this switch.
-
-An already occupied short name is skipped with a warning. Later registrations by other mods can still conflict; disable aliases and use the full names when needed. Invalid startup configuration disables aliases while keeping the full commands available.
+`clear` empties the current world's in-memory history and removes its recovery copies, including quarantined corrupt history. Messages arriving after the clear are retained normally.
 
 ## Optional client installation
 
-Install the matching JAR and Fabric API in a Fabric client of the same Minecraft version. Chat Patches, Chat Tools, Chat Heads and Mod Menu are **optional**, not bundled. Without a supported timestamp mod, all client preferences work; this mod adds no timestamp prefix or separate history panel.
+Install the matching JAR and Fabric API in a Fabric client of the same Minecraft version.
 
-### Settings and commands
+### Client settings and commands
 
-Use `/rememberthatmessageclient` for the settings screen (also available through Mod Menu), or:
+The examples below use the `/rtmclient` alias. If aliases are disabled or the name conflicts with another command, use the full `/rememberthatmessageclient` command instead.
+
+Use `/rtmclient` to open the settings screen (also available through Mod Menu), or use these commands:
 
 ```text
-/rememberthatmessageclient status
-/rememberthatmessageclient config get historyLimit
-/rememberthatmessageclient config set historyLimit 100
-/rememberthatmessageclient config set events.join false
-/rememberthatmessageclient config set receiveHistory false
-/rememberthatmessageclient config set messageTimeIntegration false
-/rememberthatmessageclient config set chatHeadsIntegration false
-/rememberthatmessageclient config set skipHistoryNarration false
-/rememberthatmessageclient reload
+/rtmclient status
+/rtmclient config get historyLimit
+/rtmclient config set historyLimit 100
+/rtmclient config set events.join false
+/rtmclient config set receiveHistory false
+/rtmclient config set messageTimeIntegration false
+/rtmclient config set chatHeadsIntegration false
+/rtmclient config set skipHistoryNarration false
+/rtmclient reload
 ```
 
-These are local commands requiring no server permission. In 1.21.1/1.20.1, chat `RUN_COMMAND` clicks targeting `/rememberthatmessageclient` are blocked; type the command or use a suggestion that you explicitly submit. `config/remember_that_message-client.json` holds global preferences shared by all servers:
-
-| Setting | Default and effect |
+| Setting | Effect |
 | --- | --- |
-| `receiveHistory` | `true`; disabling suppresses history and its start/end, empty and configuration-error notices after successful negotiation. |
-| `historyLimit` | `0` follows the server; a positive integer limits eligible records. |
-| `events.join`, `events.leave`, `events.death`, `events.advancement` | All `true`; filter history only, not live chat or server storage. |
-| `messageTimeIntegration` | `true`; enables supported historical-time integrations (Chat Patches and Chat Tools). Changes require a **client restart**. |
-| `chatHeadsIntegration` | `true`; lets Chat Heads process player history using available player information. Independent of time integration; requires a **client restart**. |
-| `skipHistoryNarration` | `true`; skips enhanced history entries in narration without enabling or disabling Minecraft's narrator. |
+| `receiveHistory` | Whether to receive history sent by the server mod. |
+| `historyLimit` | Limits the number of history messages received; `0` follows the server. |
+| `events.join`, `events.leave`, `events.death`, `events.advancement` | Whether to display join, leave, death and advancement messages in history. |
+| `messageTimeIntegration` | Whether supported mods (currently Chat Patches and Chat Tools) display the server-recorded message time. Changes require a **client restart**. |
+| `chatHeadsIntegration` | Whether Chat Heads displays online players' avatars in historical messages. Changes require a **client restart**. |
+| `skipHistoryNarration` | Whether the narrator skips historical messages. |
+| `shortCommandAliases` | Whether to enable the client's `/rtmclient` alias. Changes require a **client restart**. |
 
-### When preferences apply
+`messageTimeIntegration`, `chatHeadsIntegration` and `skipHistoryNarration` require server `replayMode=auto` and successful negotiation with the server to take effect.
 
-Receiving preference changes apply on the **next connection**. They do not remove, reinsert or rewrite existing chat or Chat Patches logs. The server filters by its own policy, recipient visibility and personal event preferences **before** selecting the latest N eligible records, then sends them oldest first. Preferences can only narrow retained server history.
+Changes to `receiveHistory`, `historyLimit`, `events` and `skipHistoryNarration` require no client restart and take effect when you next connect to a server and receive history. With the optional client installed, history preferences are negotiated on connection. Failed negotiation falls back to the server defaults and displays a warning.
 
-A supporting client negotiates during Play, with an approximately two-second timeout; the old same-version configuration path remains available. Incompatible, incomplete or timed-out negotiation falls back to server-default history and displays a warning; personal preferences, including opt-out, may not apply in that case. Vanilla clients need no negotiation. Client `status` distinguishes saved preferences from those accepted for this connection.
+Changes to `messageTimeIntegration`, `chatHeadsIntegration` and `shortCommandAliases` require a client restart.
 
-### Narration and reception restrictions
+## Historical timestamps and player heads
 
-“Narrator skips history” applies to subsequently received enhanced entries after saving or reloading. When disabled, successfully inserted entries use vanilla system-chat narration, which still respects Minecraft's narrator setting. It does not enable the narrator, reread existing history or clear queued speech. Large histories can queue up and delay live-message narration, so skipping is enabled by default. Live chat, batch notices and system-message fallback retain vanilla behavior; fallback messages cannot reliably be identified as history. Find the setting on the Narrator tab of `/rememberthatmessageclient`.
+With this mod and Chat Patches or Chat Tools installed on the client, `messageTimeIntegration` (enabled by default) lets those mods display the message time recorded by the server, rather than the time the history arrives when you join.
 
-Enhanced replay also honors client-side account/launcher restrictions on receiving player chat. When player chat is prohibited, player history is neither displayed nor narrated; events use system-message reception rules. Sender blocking remains in effect, as do friends-only restrictions where supported by Minecraft. The 1.20/1.21 ports follow their native `ChatStatus` rules, including local-world exceptions.
+With this mod and Chat Heads installed on the client, `chatHeadsIntegration` (enabled by default) lets historical messages display avatars for players already online when you join. Offline-player avatars are not currently supported.
 
-## Historical time compatibility
+See the [support matrix](docs/COMPATIBILITY.md) for specific Chat Patches, Chat Tools and Chat Heads versions and the scope of validation.
 
-All event times are **server capture times**, not client-declared send times. The enhanced protocol carries them independently of signed player-chat validation. It neither changes secure-profile policy nor requires `enforce-secure-profile=false`. Historical messages are not authenticated player signatures, and no temporary player identities or chat sessions are sent.
-
-With both sides installed, server `auto`, and compatible Chat Patches integration enabled, the adapter supplies the stored time to Chat Patches for player chat and events. Chat Patches retains control of formatting, timezone, hover/context display, names, duplicate merging and logging. Its own time/system-message settings still apply. Server `system`, a vanilla client, or absent/disabled/failed integration cannot provide historical time through this adapter; Chat Patches may show reception time instead.
-
-Exact Chat Patches targets are listed in the [support matrix](docs/COMPATIBILITY.md). **Chat Patches integration is not provided for 1.20.2–1.20.6 or 1.21.2–1.21.10; time/head combinations with it are also outside the supported scope**. Other versions are attempted only if the required interface/bytecode checks pass. Passing those checks is **not a completed live compatibility test**; client status marks the integration as unverified in game. An incompatibility or runtime failure disables the adapter, reports the reason and warns once per connection while basic history remains available. Already displayed batches are not resent.
-
-After setting `messageTimeIntegration=false` and restarting, this mod applies **no Chat Patches or Chat Tools time Mixins and supplies no historical time metadata to either mod**. Those mods still process ordinary chat according to their own settings. The switch does not disable this mod's independent networking or preferences.
-
-### Chat Tools
-
-The additional target is **Chat Tools 2.4.5 for the matching Fabric targets in the support matrix**, controlled by the same `messageTimeIntegration` setting. On the enhanced path, player chat and events use server-capture time for its timestamp prefix, hover date/time and message time metadata used by copying. Chat Tools retains its timestamp toggle, format and local timezone behavior; this mod does not add a second prefix itself or change its other HUD features. System fallback cannot supply historical time through this adapter.
-
-An optional Chat Patches queue hook carries this time through delayed insertion, independently of the Chat Heads toggle. If both timestamp mods enable their prefixes, both may appear; choose the desired display in their own settings. `/rememberthatmessageclient status` reports each adapter separately. Missing or incompatible Chat Tools leaves basic history available. After disabling time compatibility and restarting, its time and time-queue hooks are not applied; the independent head queue hook may remain enabled.
-
-Automated tests and headless checks with the official JAR verify time scopes, actual timestamp transformations, and class loading with Chat Patches/Chat Heads. In-game rendering, copy menus, duplicate merging and live compatibility still require the acceptance checks.
-
-## Chat Heads compatibility
-
-The Compatibility tab contains separate time and Chat Heads toggles. With Chat Heads **the releases listed in the support matrix**, enhanced player history enters its existing head-detection logic using the sender UUID and the current connection's player information. Its detection, placement and rendering settings remain authoritative. Events do not receive a player head through this adapter. A missing player profile falls back to Chat Heads' own detection; this mod adds no offline profile cache, skin requests or fake player-list entries, and does not promise offline avatars or historical skins.
-
-When Chat Patches **from the supported matrix entries** is also installed, an optional queue hook retains head metadata while its log loads, then restores it during insertion without decorating twice. This head-specific Chat Patches hook is independent of `messageTimeIntegration`; disabling time integration alone does not disable it. To disable this mod's head integration and queue hook, set `chatHeadsIntegration=false` and restart. Chat Heads' own behavior on ordinary messages remains intact. Missing/unsupported integrations leave basic history available; `status` lists their state and a runtime error disables head integration for the connection.
-
-The implementation uses available player information only. Supporting full offline avatars remains future work. Automated tests and headless class transformation checks do not replace in-game checks of rendering, merged messages or loading existing logs.
-
-Vanilla retains at most 100 chat messages and 100 rendered lines. Wrapping and batch notices consume that budget; a larger server limit does not enlarge it. Replay remains within one tick after negotiation or timeout, without pagination or interleaved tick batches.
-
-**Validation status:** unit tests do not prove actual Fabric injection; headless transformation checks do not prove game compatibility. See [docs/TESTING.md](docs/TESTING.md) for the separate vanilla, optional-client, dedicated-server, singleplayer/LAN, Chat Patches and Chat Tools acceptance checks.
+If these integrations cause problems, try setting `messageTimeIntegration=false` or `chatHeadsIntegration=false` to disable the corresponding feature, then restart the client.
 
 ## Persistence
 
-Each world stores `data/remember_that_message/history.json` plus a `.bak` recovery snapshot. Format 3 records `minecraftVersion` and `componentEncoding` once in the header. Records retain native JSON, capture time, order, sender identity and the separate filtered alternative. Matching encodings do not convert; supported different encodings migrate automatically. Known unmarked format-2 data can upgrade; ambiguous structures and future formats are preserved with writes blocked and an explicit error.
+History is stored in each world's `data/remember_that_message/history.json`, with a `.bak` recovery snapshot.
 
-### Saving and recovery
+Changes to ordinary records are submitted for background saving at the end of the server tick in which they occur, on a best-effort basis. An invalid primary file is quarantined as `.corrupt-<uuid>` before recovery from the backup is attempted.
 
-Ordinary records are combined into one immutable persistence snapshot at the end of each changed server tick. Unchanged snapshots are reused; a single background writer additionally coalesces pending ordinary writes. Configuration changes and clearing retain their explicit persistence boundaries, and normal shutdown waits for the final snapshot, including records received after the last tick. Temporary files and atomic replacement protect updates where the filesystem supports atomic moves. A crash or I/O failure can lose changes that have not been persisted; this is not a transactional chat archive.
+When migrating between Minecraft versions, the mod attempts to convert the records and retains at most one pre-migration backup as `history.json.previous-version`.
 
-Replay lazily caches decoded text components per world and shares them across recipients. Eviction, shrinking, clearing, and shutdown release obsolete cache entries. Visibility and text filtering remain recipient-specific. Replay still sends all retained, enabled records in one tick after negotiation or timeout; this optimization does not introduce pagination or spread replay across ticks.
-
-An invalid primary file is quarantined as `.corrupt-<uuid>` and the backup is tried. If neither copy is usable, the mod starts empty and logs the error while preserving damaged files. If preservation itself fails, writes refuse to overwrite those files; repair permissions and restart, or explicitly clear. Storage failures leave recording active in memory and are retried on subsequent changes and shutdown.
-
-### Cross-version history
-
-Migration validates the entire result before replacing the file. At most one old-version copy is kept as `history.json.previous-version`; the ordinary `.bak` contains the new format after success. Unmappable content may degrade to readable text or an explicit placeholder. Item/entity hover data becomes text; unsupported interactions/styles are reported, not silently claimed as preserved. Logs and `/rememberthatmessage status` report source, destination, record count and losses. Filtered content is converted independently and never replaced by its unfiltered counterpart. To roll back, stop the server and restore the previous-version copy with the matching build. Explicit `clear` also removes this migration backup.
-
-Portable JSON is generated lazily only for cross-version recipients, cached separately for original and filtered content, shared across recipients and released on eviction/clear/shutdown. It is not stored twice on disk. Wire text is limited to 256 KiB UTF-8 and conversion nesting to 64; oversize content is rejected, not silently truncated. Clients show one simplification warning. The old configuration-phase protocol remains a same-version fallback on 1.20.5 and later targets; cross-version replay requires the new Play protocol on both ends. Build only 1.20.1 with `./gradlew -PgameTargets=1.20.1 build`.
-
-New Play replay replaces an individual conversion or encoding failure with a short `[Chat History] This record could not be displayed.` placeholder, retaining its order and time while continuing subsequent records. Stored history is unchanged. Client-side text parsing failures also use placeholders. Original reception restrictions still apply, but timestamp/head integrations receive a system presentation without player attribution. On the closing boundary, updated clients check record counts and unavailable entries, retain displayed content and warn once if replay is incomplete; they do not automatically retry. Older clients can display the placeholder's English fallback. Actual network-send failures still abort the batch.
-
-## Build
+## Development and build
 
 ```sh
 ./gradlew clean build
